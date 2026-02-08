@@ -1,0 +1,18 @@
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Audio processing
+librosa==0.10.1
+soundfile==0.12.1
+scipy==1.11.4
+numpy==1.26.2
+
+# PyTorch (CPU only)
+torch==2.4.0+cpu
+torchaudio==2.4.0+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Text emotion model (compatible with PyTorch 2.4)
+transformers>=4.37.0
