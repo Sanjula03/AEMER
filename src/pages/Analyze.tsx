@@ -122,7 +122,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
     setError(null);
 
     try {
-      // Call the appropriate analysis function based on input type
+      // Call the real API for emotion analysis based on input type
       let modelResult;
       if (inputType === 'audio' || inputType === 'video') {
         // Send audio/video to Python backend for real model prediction
