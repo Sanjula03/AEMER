@@ -49,8 +49,8 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
     }
   };
 
-  // Backend API URL - change this if deploying to production
-  const API_URL = 'https://sanjulasunath-aemer.hf.space';
+  // Backend API URL - Hugging Face Space
+  const API_URL = 'https://sanjula03-aemer.hf.space';
 
   /**
    * Send audio file to the Python backend for emotion analysis.
