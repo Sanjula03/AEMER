@@ -229,6 +229,22 @@ if CV2_AVAILABLE:
             
             return self.EMOTIONS[idx], conf, {self.EMOTIONS[i]: probs[i].item() for i in range(4)}
         
+        def check_blur(self, frame: np.ndarray) -> Tuple[bool, float]:
+            """Check if image is blurry using Laplacian variance."""
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+            # Lower variance = more blurry. Threshold of 100 works well.
+            is_blurry = laplacian_var < 100
+            return is_blurry, laplacian_var
+        
+        def check_brightness(self, frame: np.ndarray) -> Tuple[bool, bool, float]:
+            """Check if image is too dark or too bright."""
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            avg_brightness = np.mean(gray)
+            is_dark = avg_brightness < 50
+            is_bright = avg_brightness > 200
+            return is_dark, is_bright, avg_brightness
+        
         def process_image(self, image_bytes: bytes) -> Dict:
             nparr = np.frombuffer(image_bytes, np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -236,25 +252,45 @@ if CV2_AVAILABLE:
             if frame is None:
                 return {'emotion': 'neutral', 'confidence': 0.0, 'error': 'Failed to decode image'}
             
+            # Check image quality
+            is_blurry, blur_score = self.check_blur(frame)
+            is_dark, is_bright, brightness = self.check_brightness(frame)
+            
+            quality_issues = []
+            if is_blurry:
+                quality_issues.append(f"Image is blurry (sharpness: {blur_score:.0f})")
+            if is_dark:
+                quality_issues.append("Image is too dark")
+            if is_bright:
+                quality_issues.append("Image is too bright/overexposed")
+            
             faces = self.detect_faces(frame)
             
             if faces:
                 x, y, w, h = faces[0]
                 face_img = frame[y:y+h, x:x+w]
                 emotion, conf, all_probs = self.predict_emotion(face_img)
-                return {
+                result = {
                     'emotion': emotion,
                     'confidence': conf,
                     'all_probabilities': all_probs,
-                    'faces_detected': len(faces)
+                    'faces_detected': len(faces),
+                    'image_quality': {
+                        'blur_score': blur_score,
+                        'brightness': brightness
+                    }
                 }
+                if quality_issues:
+                    result['quality_warning'] = "; ".join(quality_issues)
+                return result
             else:
+                quality_issues.append("No face detected - try a clearer image")
                 return {
                     'emotion': 'neutral',
                     'confidence': 0.0,
                     'all_probabilities': {e: 0.25 for e in self.EMOTIONS},
                     'faces_detected': 0,
-                    'warning': 'No face detected'
+                    'quality_warning': "; ".join(quality_issues)
                 }
         
         def process_video(self, video_bytes: bytes, sample_rate: int = 1) -> Dict:

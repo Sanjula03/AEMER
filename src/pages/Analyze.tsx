@@ -133,6 +133,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
         angry: 0.25, happy: 0.25, sad: 0.25, neutral: 0.25
       },
       faces_detected: result.faces_detected || 0,
+      quality_warning: result.quality_warning,  // Pass through quality warning
       detected_accent: null,
       audio_weight: 0.0,
       text_weight: 0.0,
