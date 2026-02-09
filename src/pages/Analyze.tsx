@@ -305,7 +305,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                     <input
                       type="file"
                       onChange={handleFileChange}
-                      accept={inputType === 'audio' ? 'audio/*' : 'video/*'}
+                      accept={inputType === 'audio' ? 'audio/*' : 'video/*,image/*'}
                       className="hidden"
                       id="file-upload"
                     />
