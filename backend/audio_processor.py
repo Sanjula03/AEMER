@@ -4,16 +4,20 @@ Converts raw audio files into Log-Mel Spectrograms for the emotion model.
 
 Preprocessing steps:
 1. Resample to 16kHz
-2. Trim silence
-3. Normalize audio
-4. Pad/trim to 4 seconds
-5. Extract Log-Mel Spectrogram
-6. Per-sample normalization (zero mean, unit variance)
+2. Noise reduction (spectral gating)
+3. Bandpass filter (80Hz - 3000Hz for speech)
+4. Trim silence
+5. Normalize audio
+6. Pad/trim to 4 seconds
+7. Extract Log-Mel Spectrogram
+8. Per-sample normalization (zero mean, unit variance)
 """
 
 import numpy as np
 import librosa
 import torch
+import noisereduce as nr
+from scipy.signal import butter, sosfilt
 
 
 class AudioProcessor:
@@ -89,6 +93,77 @@ class AudioProcessor:
         
         return audio
     
+    def reduce_noise(self, audio: np.ndarray) -> np.ndarray:
+        """
+        Apply spectral gating noise reduction.
+        Uses noisereduce library for effective background noise removal.
+        """
+        try:
+            # Stationary noise reduction - works well for consistent background noise
+            reduced = nr.reduce_noise(
+                y=audio, 
+                sr=self.sample_rate,
+                stationary=True,
+                prop_decrease=0.75  # How much to reduce noise (0-1)
+            )
+            return reduced
+        except Exception as e:
+            # If noise reduction fails, return original audio
+            print(f"Warning: Noise reduction failed: {e}")
+            return audio
+    
+    def bandpass_filter(self, audio: np.ndarray, low_freq: int = 80, high_freq: int = 3000) -> np.ndarray:
+        """
+        Apply bandpass filter to isolate speech frequencies.
+        Human speech typically ranges from 80Hz to 3000Hz.
+        
+        Args:
+            audio: Input audio signal
+            low_freq: Lower cutoff frequency (Hz)
+            high_freq: Upper cutoff frequency (Hz)
+        """
+        try:
+            # Design Butterworth bandpass filter
+            nyquist = self.sample_rate / 2
+            low = low_freq / nyquist
+            high = high_freq / nyquist
+            
+            # Ensure frequencies are valid
+            if low >= 1 or high >= 1 or low <= 0 or high <= 0:
+                return audio
+            
+            sos = butter(5, [low, high], btype='band', output='sos')
+            filtered = sosfilt(sos, audio)
+            return filtered.astype(np.float32)
+        except Exception as e:
+            print(f"Warning: Bandpass filter failed: {e}")
+            return audio
+    
+    def calculate_snr(self, audio: np.ndarray) -> float:
+        """
+        Estimate Signal-to-Noise Ratio (SNR) in dB.
+        Higher values indicate cleaner audio.
+        
+        Returns:
+            SNR in decibels. Typical values:
+            < 0 dB: Very noisy
+            0-10 dB: Noisy  
+            10-20 dB: Acceptable
+            > 20 dB: Clean
+        """
+        try:
+            # Use top 10% of signal as "signal" and bottom 10% as "noise"
+            sorted_audio = np.sort(np.abs(audio))
+            noise_floor = np.mean(sorted_audio[:int(len(audio) * 0.1)])
+            signal_level = np.mean(sorted_audio[int(len(audio) * 0.9):])
+            
+            if noise_floor > 0:
+                snr = 20 * np.log10(signal_level / noise_floor)
+                return float(snr)
+            return float('inf')
+        except:
+            return 0.0
+    
     def trim_silence(self, audio: np.ndarray) -> np.ndarray:
         """Trim leading and trailing silence."""
         trimmed, _ = librosa.effects.trim(audio, top_db=20)
@@ -138,24 +213,36 @@ class AudioProcessor:
             spectrogram = (spectrogram - mean) / std
         return spectrogram
     
-    def process(self, audio_bytes: bytes, filename: str) -> torch.Tensor:
+    def process(self, audio_bytes: bytes, filename: str) -> tuple:
         """
-        Full preprocessing pipeline.
+        Full preprocessing pipeline with noise reduction.
         
         Args:
             audio_bytes: Raw audio file bytes
             filename: Original filename (for extension detection)
             
         Returns:
-            torch.Tensor: Preprocessed log-mel spectrogram ready for model
+            tuple: (tensor, snr_db)
+                - tensor: Preprocessed log-mel spectrogram ready for model
+                - snr_db: Estimated Signal-to-Noise Ratio in dB
         """
         # Load audio from bytes
         audio = self.load_audio_from_bytes(audio_bytes, filename)
         
-        # Preprocessing pipeline
-        audio = self.trim_silence(audio)
-        audio = self.normalize_audio(audio)
-        audio = self.pad_or_trim(audio)
+        # Calculate SNR before processing (for quality metric)
+        snr_before = self.calculate_snr(audio)
+        
+        # Noise reduction pipeline
+        audio = self.reduce_noise(audio)          # Step 1: Remove background noise
+        audio = self.bandpass_filter(audio)       # Step 2: Isolate speech frequencies
+        
+        # Standard preprocessing
+        audio = self.trim_silence(audio)          # Step 3: Remove silence
+        audio = self.normalize_audio(audio)       # Step 4: Peak normalize
+        audio = self.pad_or_trim(audio)           # Step 5: Fixed 4s length
+        
+        # Calculate SNR after processing
+        snr_after = self.calculate_snr(audio)
         
         # Feature extraction
         log_mel_spec = self.extract_log_mel_spectrogram(audio)
@@ -165,7 +252,7 @@ class AudioProcessor:
         # Shape: (1, 1, n_mels, time_frames)
         tensor = torch.FloatTensor(log_mel_spec).unsqueeze(0).unsqueeze(0)
         
-        return tensor
+        return tensor, snr_after
 
 
 # Test the processor

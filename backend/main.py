@@ -215,9 +215,9 @@ async def predict_emotion(file: UploadFile = File(...)):
         
         print(f"\n📁 Processing: {file.filename} ({len(audio_bytes)} bytes)")
         
-        # Preprocess audio
-        features = audio_processor.process(audio_bytes, file.filename or "audio.wav")
-        print(f"   Features shape: {features.shape}")
+        # Preprocess audio (with noise reduction)
+        features, snr_db = audio_processor.process(audio_bytes, file.filename or "audio.wav")
+        print(f"   Features shape: {features.shape}, SNR: {snr_db:.1f} dB")
         
         # Run emotion prediction
         emotion_label, confidence, all_probs = model_handler.predict(features)

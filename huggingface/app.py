@@ -11,6 +11,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import librosa
+import noisereduce as nr
+from scipy.signal import butter, sosfilt
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -143,17 +145,39 @@ class AudioProcessor:
         return audio, sr
     
     def process_for_emotion(self, audio_bytes: bytes) -> torch.Tensor:
-        """Convert audio bytes to normalized mel spectrogram for emotion model (4s)."""
+        """Convert audio bytes to normalized mel spectrogram for emotion model (4s).
+        Includes noise reduction and bandpass filtering."""
         audio, sr = self.load_audio(audio_bytes)
         
-        # Trim silence
+        # Step 1: Noise reduction (spectral gating)
+        try:
+            audio = nr.reduce_noise(y=audio, sr=sr, stationary=True, prop_decrease=0.75)
+        except Exception:
+            pass  # Keep original if noise reduction fails
+        
+        # Step 2: Bandpass filter for speech (80Hz - 3000Hz)
+        try:
+            nyquist = sr / 2
+            low, high = 80 / nyquist, 3000 / nyquist
+            if 0 < low < 1 and 0 < high < 1:
+                sos = butter(5, [low, high], btype='band', output='sos')
+                audio = sosfilt(sos, audio).astype(np.float32)
+        except Exception:
+            pass  # Keep original if filtering fails
+        
+        # Step 3: Trim silence
         audio, _ = librosa.effects.trim(audio, top_db=20)
         
-        # Pad or trim to target length (4 seconds for emotion)
+        # Step 4: Pad or trim to target length (4 seconds for emotion)
         if len(audio) < self.target_length:
             audio = np.pad(audio, (0, self.target_length - len(audio)), mode='constant')
         else:
             audio = audio[:self.target_length]
+        
+        # Step 5: Normalize amplitude
+        max_val = np.max(np.abs(audio))
+        if max_val > 0:
+            audio = audio / max_val
         
         # Create mel spectrogram
         mel_spec = librosa.feature.melspectrogram(
