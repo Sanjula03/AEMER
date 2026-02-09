@@ -357,6 +357,14 @@ class AudioProcessor:
         audio, sr = librosa.load(io.BytesIO(audio_bytes), sr=self.sample_rate, mono=True)
         return audio, sr
     
+    def check_clipping(self, audio: np.ndarray) -> Tuple[bool, float]:
+        """Check if audio has clipping (samples at max amplitude).
+        Returns (is_clipped, clipping_percentage)."""
+        clipped_samples = np.sum(np.abs(audio) > 0.99)
+        clipping_pct = (clipped_samples / len(audio)) * 100
+        is_clipped = clipping_pct > 5  # More than 5% clipped
+        return is_clipped, clipping_pct
+    
     def process_for_emotion(self, audio_bytes: bytes) -> torch.Tensor:
         """Convert audio bytes to normalized mel spectrogram for emotion model (4s).
         Includes noise reduction and bandpass filtering."""
@@ -743,11 +751,20 @@ async def predict(file: UploadFile = File(...)):
         if len(audio_bytes) == 0:
             raise HTTPException(status_code=400, detail="Empty file uploaded")
         
+        # Check for audio clipping before processing
+        warnings = []
+        try:
+            raw_audio, _ = model_handler.audio_processor.load_audio(audio_bytes)
+            is_clipped, clip_pct = model_handler.audio_processor.check_clipping(raw_audio)
+            if is_clipped:
+                warnings.append(f"Audio clipping detected ({clip_pct:.1f}% clipped) - may affect accuracy")
+        except:
+            pass  # Continue even if clipping check fails
+        
         # Get prediction
         result = model_handler.predict(audio_bytes)
         
         # Add quality warning for low confidence
-        warnings = []
         if result.get("confidence_score", 1.0) < 0.5:
             warnings.append("Low confidence - prediction may be inaccurate")
         
@@ -838,8 +855,11 @@ async def predict_video(file: UploadFile = File(...)):
         
         # Add quality warnings
         warnings = []
-        if result.get("faces_detected", 0) == 0:
+        faces = result.get("faces_detected", 0)
+        if faces == 0:
             warnings.append("No face detected - try a clearer image with visible face")
+        elif faces > 1:
+            warnings.append(f"Multiple faces detected ({faces}) - analyzing primary face only")
         if result.get("confidence", 1.0) < 0.5:
             warnings.append("Low confidence - prediction may be inaccurate")
         
