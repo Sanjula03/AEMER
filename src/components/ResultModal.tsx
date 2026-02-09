@@ -54,7 +54,7 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in duration-300 max-h-[90vh] flex flex-col">
                 {/* Header with gradient */}
                 <div
                     className={`bg-gradient-to-r ${getEmotionColor(result.emotion_label)} p-6 text-white text-center`}
@@ -72,7 +72,7 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                 </div>
 
                 {/* Content */}
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6 overflow-y-auto flex-1">
                     {/* Quality Warning */}
                     {result.quality_warning && (
                         <div className="flex items-start space-x-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
