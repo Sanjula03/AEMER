@@ -710,6 +710,14 @@ async def predict(file: UploadFile = File(...)):
         # Get prediction
         result = model_handler.predict(audio_bytes)
         
+        # Add quality warning for low confidence
+        warnings = []
+        if result.get("confidence_score", 1.0) < 0.5:
+            warnings.append("Low confidence - prediction may be inaccurate")
+        
+        if warnings:
+            result["quality_warning"] = "; ".join(warnings)
+        
         return result
         
     except Exception as e:
@@ -733,7 +741,21 @@ async def predict_text(request: TextPredictionRequest):
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     
     try:
+        # Check for short text warning
+        warnings = []
+        word_count = len(request.text.strip().split())
+        if word_count < 3:
+            warnings.append("Text is very short - prediction may be less accurate")
+        
         result = model_handler.predict_text(request.text)
+        
+        # Add low confidence warning
+        if result.get("confidence_score", 1.0) < 0.5:
+            warnings.append("Low confidence - prediction may be inaccurate")
+        
+        if warnings:
+            result["quality_warning"] = "; ".join(warnings)
+        
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Text prediction failed: {str(e)}")
@@ -777,6 +799,16 @@ async def predict_video(file: UploadFile = File(...)):
             result = video_handler.process_video(file_bytes)
         else:
             result = video_handler.process_image(file_bytes)
+        
+        # Add quality warnings
+        warnings = []
+        if result.get("faces_detected", 0) == 0:
+            warnings.append("No face detected - try a clearer image with visible face")
+        if result.get("confidence", 1.0) < 0.5:
+            warnings.append("Low confidence - prediction may be inaccurate")
+        
+        if warnings:
+            result["quality_warning"] = "; ".join(warnings)
         
         return result
     except HTTPException:

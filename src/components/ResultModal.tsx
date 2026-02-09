@@ -1,9 +1,10 @@
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 
 interface EmotionResult {
     emotion_label: string;
     confidence_score: number;
     all_probabilities?: Record<string, number>;
+    quality_warning?: string;
 }
 
 interface ResultModalProps {
@@ -72,6 +73,14 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
 
                 {/* Content */}
                 <div className="p-6 space-y-6">
+                    {/* Quality Warning */}
+                    {result.quality_warning && (
+                        <div className="flex items-start space-x-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-amber-800">{result.quality_warning}</p>
+                        </div>
+                    )}
+
                     {/* Confidence Score */}
                     <div className="text-center">
                         <div className="text-sm text-gray-500 mb-2">Confidence Score</div>
