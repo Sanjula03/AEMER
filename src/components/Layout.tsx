@@ -58,8 +58,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2 ${currentPage === item.id
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
-                    : 'text-amber-200/70 hover:bg-amber-900/30 hover:text-amber-100'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30'
+                  : 'text-amber-200/70 hover:bg-amber-900/30 hover:text-amber-100'
                   }`}
               >
                 <span>{item.emoji}</span>
@@ -78,7 +78,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="relative text-center py-6 text-amber-200/40 text-sm">
+      <footer className="relative text-center py-8 mt-8 text-amber-200/40 text-sm">
         <p>Built with 🎭 AI-Powered Emotion Recognition</p>
       </footer>
     </div>
