@@ -9,13 +9,18 @@ soundfile==0.12.1
 scipy==1.11.4
 numpy==1.26.2
 
-# PyTorch (CPU only)
+# PyTorch (CPU only) - extra-index-url must come first
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.4.0+cpu
 torchaudio==2.4.0+cpu
---extra-index-url https://download.pytorch.org/whl/cpu
+torchvision==0.19.0+cpu
 
-# Text emotion model (compatible with PyTorch 2.4)
+# Text emotion model
 transformers>=4.37.0
 
 # Noise reduction
 noisereduce>=2.0.0
+
+# Video emotion (headless for server)
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0

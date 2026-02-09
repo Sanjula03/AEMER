@@ -38,8 +38,9 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
         return;
       }
 
-      if (inputType === 'video' && !validVideoTypes.includes(selectedFile.type)) {
-        setError('Please upload a valid video file (MP4, MOV, WEBM)');
+      if (inputType === 'video' && !validVideoTypes.includes(selectedFile.type) &&
+        !selectedFile.type.startsWith('image/')) {
+        setError('Please upload a valid video (MP4, MOV, WEBM) or image (JPG, PNG) file');
         return;
       }
 
@@ -105,6 +106,43 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
     };
   };
 
+  /**
+   * Send video/image file to the Python backend for facial emotion analysis.
+   * Uses the ResNet-18 video emotion model with face detection.
+   */
+  const analyzeVideo = async (videoFile: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', videoFile);
+
+    const response = await fetch(`${API_URL}/predict-video`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Video analysis failed');
+    }
+
+    const result = await response.json();
+    // Map video response format to expected format
+    return {
+      emotion_label: result.emotion,
+      confidence_score: result.confidence,
+      all_probabilities: result.all_probabilities || {
+        angry: 0.25, happy: 0.25, sad: 0.25, neutral: 0.25
+      },
+      faces_detected: result.faces_detected || 0,
+      detected_accent: null,
+      audio_weight: 0.0,
+      text_weight: 0.0,
+      visual_weight: 1.0,
+      audio_score: 0.0,
+      text_score: 0.0,
+      visual_score: result.confidence,
+    };
+  };
+
   const handleSubmit = async () => {
     if (!inputType) return;
 
@@ -124,11 +162,14 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
     try {
       // Call the real API for emotion analysis based on input type
       let modelResult;
-      if (inputType === 'audio' || inputType === 'video') {
-        // Send audio/video to Python backend for real model prediction
+      if (inputType === 'audio') {
+        // Send audio to Python backend for audio emotion prediction
         modelResult = await analyzeAudio(file!);
+      } else if (inputType === 'video') {
+        // Send video/image to Python backend for facial emotion prediction
+        modelResult = await analyzeVideo(file!);
       } else {
-        // Send text to Python backend for real text emotion prediction
+        // Send text to Python backend for text emotion prediction
         modelResult = await analyzeText(textInput);
       }
 

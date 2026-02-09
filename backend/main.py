@@ -21,6 +21,7 @@ from audio_processor import AudioProcessor
 from model_handler import ModelHandler
 from accent_handler import AccentHandler
 from text_handler import TextHandler
+from video_handler import VideoEmotionHandler
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -43,6 +44,7 @@ audio_processor = AudioProcessor()
 model_handler = None
 accent_handler = None
 text_handler = None
+video_handler = None
 
 # Path to the trained model
 MODEL_PATH = os.path.join(
@@ -63,6 +65,13 @@ TEXT_MODEL_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "TextModel",
     "text_model.pth"
+)
+
+# Path to the video emotion model
+VIDEO_MODEL_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "VideoModel",
+    "video_model.pth"
 )
 
 
@@ -87,6 +96,7 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     accent_model_loaded: bool
     text_model_loaded: bool
+    video_model_loaded: bool
     device: str
 
 
@@ -105,7 +115,7 @@ class TextPredictionResponse(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     """Load the model when the server starts."""
-    global model_handler, accent_handler, text_handler
+    global model_handler, accent_handler, text_handler, video_handler
     
     print(f"\n{'='*50}")
     print("AEMER Backend Starting...")
@@ -141,6 +151,16 @@ async def startup_event():
     else:
         print(f"⚠️ Text model not found at: {TEXT_MODEL_PATH}")
     
+    # Load video emotion model
+    if os.path.exists(VIDEO_MODEL_PATH):
+        try:
+            video_handler = VideoEmotionHandler(VIDEO_MODEL_PATH)
+            print(f"✅ Video emotion model loaded from: {VIDEO_MODEL_PATH}")
+        except Exception as e:
+            print(f"❌ Failed to load video model: {e}")
+    else:
+        print(f"⚠️ Video model not found at: {VIDEO_MODEL_PATH}")
+    
     print(f"\n{'='*50}")
     print("Server ready! API docs at: http://localhost:8000/docs")
     print(f"{'='*50}\n")
@@ -167,6 +187,7 @@ async def health_check():
         model_loaded=model_handler is not None and model_handler.model is not None,
         accent_model_loaded=accent_handler is not None and accent_handler.model is not None,
         text_model_loaded=text_handler is not None and text_handler.model is not None,
+        video_model_loaded=video_handler is not None and video_handler.model is not None,
         device="cuda" if torch.cuda.is_available() else "cpu"
     )
 
@@ -302,6 +323,71 @@ async def predict_text_emotion(request: TextPredictionRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Error processing text: {str(e)}"
+        )
+
+
+@app.post("/predict-video", tags=["Prediction"])
+async def predict_video_emotion(file: UploadFile = File(...)):
+    """
+    Analyze video file and predict facial emotion.
+    
+    Args:
+        file: Video file (MP4, AVI, MOV, etc.) or image file (JPG, PNG)
+        
+    Returns:
+        Emotion prediction with confidence scores
+    """
+    # Validate model is loaded
+    if video_handler is None or video_handler.model is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Video model not loaded. Please check server logs."
+        )
+    
+    # Validate file type
+    allowed_video_ext = [".mp4", ".avi", ".mov", ".mkv", ".webm"]
+    allowed_image_ext = [".jpg", ".jpeg", ".png", ".bmp", ".gif"]
+    
+    file_ext = ""
+    if file.filename:
+        file_ext = "." + file.filename.lower().split(".")[-1]
+    
+    is_video = file_ext in allowed_video_ext
+    is_image = file_ext in allowed_image_ext
+    
+    if not is_video and not is_image:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Allowed: {allowed_video_ext + allowed_image_ext}"
+        )
+    
+    try:
+        # Read file bytes
+        file_bytes = await file.read()
+        
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        
+        print(f"\n📹 Processing: {file.filename} ({len(file_bytes)} bytes)")
+        
+        if is_video:
+            result = video_handler.process_video(file_bytes)
+        else:
+            result = video_handler.process_image(file_bytes)
+        
+        print(f"   Emotion: {result.get('emotion')} ({result.get('confidence', 0):.2%})")
+        
+        return result
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error processing video: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing video: {str(e)}"
         )
 
 

@@ -1,11 +1,12 @@
 """
 AEMER - Accent-aware Multimodal Emotion Recognition
 FastAPI Backend for Hugging Face Spaces
-With Accent Detection and Text Emotion
+With Accent Detection, Text Emotion, and Video Emotion
 """
 
 import io
 import os
+import tempfile
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,7 +17,18 @@ from scipy.signal import butter, sosfilt
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Tuple
+
+# Conditional imports for video processing
+try:
+    import cv2
+    from PIL import Image
+    import torchvision.models as models
+    import torchvision.transforms as transforms
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    print("⚠️ opencv/torchvision not installed - video emotion disabled")
 
 # Conditional import - transformers may not be available
 try:
@@ -124,6 +136,171 @@ if TRANSFORMERS_AVAILABLE:
             x = self.relu(self.fc1(x))
             x = self.dropout(x)
             return self.fc2(x)
+
+
+# ============================================
+# VIDEO EMOTION MODEL ARCHITECTURE
+# ============================================
+
+if CV2_AVAILABLE:
+    class FacialEmotionResNet(nn.Module):
+        """ResNet-18 based facial emotion classifier."""
+        
+        def __init__(self, num_classes=4):
+            super().__init__()
+            self.resnet = models.resnet18(pretrained=False)
+            num_features = self.resnet.fc.in_features
+            self.resnet.fc = nn.Sequential(
+                nn.Dropout(0.5),
+                nn.Linear(num_features, 256),
+                nn.ReLU(),
+                nn.Dropout(0.3),
+                nn.Linear(256, num_classes)
+            )
+        
+        def forward(self, x):
+            return self.resnet(x)
+    
+    class VideoEmotionHandler:
+        """Handles video emotion detection with face detection."""
+        
+        EMOTIONS = ['angry', 'happy', 'sad', 'neutral']
+        
+        def __init__(self, model_path: str = "video_model.pth"):
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.model = None
+            self.face_cascade = None
+            
+            self.transform = transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+            
+            self.load_model(model_path)
+            self.load_face_detector()
+        
+        def load_model(self, model_path: str) -> bool:
+            if not os.path.exists(model_path):
+                print(f"⚠️ Video model not found at {model_path}")
+                return False
+            
+            try:
+                self.model = FacialEmotionResNet(num_classes=4)
+                state_dict = torch.load(model_path, map_location=self.device, weights_only=False)
+                self.model.load_state_dict(state_dict)
+                self.model.to(self.device)
+                self.model.eval()
+                print(f"✅ Video model loaded from {model_path}")
+                return True
+            except Exception as e:
+                print(f"❌ Error loading video model: {e}")
+                return False
+        
+        def load_face_detector(self):
+            try:
+                self.face_cascade = cv2.CascadeClassifier(
+                    cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+                )
+                print("✅ Face detector loaded")
+            except Exception as e:
+                print(f"⚠️ Face detector error: {e}")
+        
+        def detect_faces(self, frame: np.ndarray) -> List[Tuple[int, int, int, int]]:
+            if self.face_cascade is None:
+                return []
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = self.face_cascade.detectMultiScale(gray, 1.1, 5, minSize=(48, 48))
+            return [(x, y, w, h) for (x, y, w, h) in faces]
+        
+        def predict_emotion(self, face_img: np.ndarray) -> Tuple[str, float, Dict[str, float]]:
+            if self.model is None:
+                return 'neutral', 0.25, {e: 0.25 for e in self.EMOTIONS}
+            
+            face_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(face_rgb)
+            tensor = self.transform(pil_img).unsqueeze(0).to(self.device)
+            
+            with torch.no_grad():
+                outputs = self.model(tensor)
+                probs = torch.softmax(outputs, dim=1)[0]
+                idx = probs.argmax().item()
+                conf = probs[idx].item()
+            
+            return self.EMOTIONS[idx], conf, {self.EMOTIONS[i]: probs[i].item() for i in range(4)}
+        
+        def process_image(self, image_bytes: bytes) -> Dict:
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            if frame is None:
+                return {'emotion': 'neutral', 'confidence': 0.0, 'error': 'Failed to decode image'}
+            
+            faces = self.detect_faces(frame)
+            
+            if faces:
+                x, y, w, h = faces[0]
+                face_img = frame[y:y+h, x:x+w]
+                emotion, conf, all_probs = self.predict_emotion(face_img)
+                return {
+                    'emotion': emotion,
+                    'confidence': conf,
+                    'all_probabilities': all_probs,
+                    'faces_detected': len(faces)
+                }
+            else:
+                return {
+                    'emotion': 'neutral',
+                    'confidence': 0.0,
+                    'all_probabilities': {e: 0.25 for e in self.EMOTIONS},
+                    'faces_detected': 0,
+                    'warning': 'No face detected'
+                }
+        
+        def process_video(self, video_bytes: bytes, sample_rate: int = 1) -> Dict:
+            with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp:
+                tmp.write(video_bytes)
+                tmp_path = tmp.name
+            
+            try:
+                cap = cv2.VideoCapture(tmp_path)
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                frame_interval = max(1, int(fps / sample_rate)) if fps > 0 else 30
+                
+                all_emotions = []
+                frame_count = 0
+                
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+                    
+                    if frame_count % frame_interval == 0:
+                        faces = self.detect_faces(frame)
+                        for (x, y, w, h) in faces:
+                            face_img = frame[y:y+h, x:x+w]
+                            emotion, _, _ = self.predict_emotion(face_img)
+                            all_emotions.append(emotion)
+                    
+                    frame_count += 1
+                
+                cap.release()
+                
+                if all_emotions:
+                    from collections import Counter
+                    counts = Counter(all_emotions)
+                    dominant = counts.most_common(1)[0][0]
+                    conf = counts[dominant] / len(all_emotions)
+                else:
+                    dominant, conf = 'neutral', 0.0
+                
+                return {
+                    'emotion': dominant,
+                    'confidence': conf,
+                    'faces_detected': len(all_emotions)
+                }
+            finally:
+                os.unlink(tmp_path)
 
 
 # ============================================
@@ -436,6 +613,11 @@ app.add_middleware(
 # Initialize model handler
 model_handler = ModelHandler()
 
+# Initialize video handler
+video_handler = None
+if CV2_AVAILABLE:
+    video_handler = VideoEmotionHandler("video_model.pth")
+
 
 # ============================================
 # RESPONSE MODELS
@@ -469,6 +651,7 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     accent_model_loaded: bool
     text_model_loaded: bool
+    video_model_loaded: bool
     device: str
 
 
@@ -481,11 +664,12 @@ async def root():
     """Root endpoint with API info."""
     return {
         "message": "AEMER - Emotion Recognition API",
-        "version": "1.2.0",
-        "features": ["emotion_detection", "accent_detection", "text_emotion"],
+        "version": "1.3.0",
+        "features": ["emotion_detection", "accent_detection", "text_emotion", "video_emotion"],
         "endpoints": {
             "predict": "POST /predict - Upload audio for emotion & accent prediction",
             "predict_text": "POST /predict-text - Text emotion prediction",
+            "predict_video": "POST /predict-video - Video/image emotion prediction",
             "health": "GET /health - Health check",
             "docs": "GET /docs - API documentation"
         }
@@ -500,6 +684,7 @@ async def health_check():
         "model_loaded": model_handler.emotion_model is not None,
         "accent_model_loaded": model_handler.accent_model is not None,
         "text_model_loaded": model_handler.text_model is not None,
+        "video_model_loaded": video_handler is not None and video_handler.model is not None,
         "device": str(model_handler.device)
     }
 
@@ -554,6 +739,52 @@ async def predict_text(request: TextPredictionRequest):
         raise HTTPException(status_code=500, detail=f"Text prediction failed: {str(e)}")
 
 
+@app.post("/predict-video")
+async def predict_video(file: UploadFile = File(...)):
+    """
+    Predict emotion from video or image file.
+    
+    Supported formats: MP4, AVI, MOV, JPG, PNG
+    Returns: Detected emotion and confidence score
+    """
+    if video_handler is None or video_handler.model is None:
+        raise HTTPException(status_code=503, detail="Video emotion model not loaded")
+    
+    # Validate file type
+    file_ext = ""
+    if file.filename:
+        file_ext = "." + file.filename.lower().split(".")[-1]
+    
+    allowed_video = [".mp4", ".avi", ".mov", ".mkv", ".webm"]
+    allowed_image = [".jpg", ".jpeg", ".png", ".bmp", ".gif"]
+    
+    is_video = file_ext in allowed_video
+    is_image = file_ext in allowed_image
+    
+    if not is_video and not is_image:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Allowed: {allowed_video + allowed_image}"
+        )
+    
+    try:
+        file_bytes = await file.read()
+        
+        if len(file_bytes) == 0:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        
+        if is_video:
+            result = video_handler.process_video(file_bytes)
+        else:
+            result = video_handler.process_image(file_bytes)
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Video prediction failed: {str(e)}")
+
+
 # Startup message
 @app.on_event("startup")
 async def startup_event():
@@ -562,4 +793,6 @@ async def startup_event():
     print(f"  Emotion model: {'✅' if model_handler.emotion_model else '❌'}")
     print(f"  Accent model: {'✅' if model_handler.accent_model else '❌'}")
     print(f"  Text model: {'✅' if model_handler.text_model else '❌'}")
+    print(f"  Video model: {'✅' if video_handler and video_handler.model else '❌'}")
     print("=" * 50)
+
