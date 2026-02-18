@@ -1,10 +1,22 @@
 import { X, AlertTriangle } from 'lucide-react';
 
+interface ModalityResult {
+    emotion_label: string;
+    confidence_score: number;
+    all_probabilities: Record<string, number>;
+    weight: number;
+}
+
 interface EmotionResult {
     emotion_label: string;
     confidence_score: number;
     all_probabilities?: Record<string, number>;
     quality_warning?: string;
+    fusion_method?: string;
+    modalities_used?: string[];
+    audio_result?: ModalityResult;
+    text_result?: ModalityResult;
+    video_result?: ModalityResult;
 }
 
 interface ResultModalProps {
@@ -121,6 +133,41 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                                             </div>
                                         </div>
                                     ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Multimodal Breakdown */}
+                    {result.modalities_used && result.modalities_used.length > 1 && (
+                        <div>
+                            <div className="text-sm text-gray-500 mb-3 text-center">
+                                Modality Breakdown ({result.fusion_method?.replace('_', ' ')})
+                            </div>
+                            <div className="space-y-2">
+                                {result.audio_result && (
+                                    <div className="flex items-center justify-between bg-teal-50 rounded-lg p-2">
+                                        <span className="text-sm">🎤 Audio</span>
+                                        <span className="text-sm font-medium capitalize">{result.audio_result.emotion_label}</span>
+                                        <span className="text-xs text-gray-500">{(result.audio_result.confidence_score * 100).toFixed(0)}%</span>
+                                        <span className="text-xs text-gray-400">w: {(result.audio_result.weight * 100).toFixed(0)}%</span>
+                                    </div>
+                                )}
+                                {result.text_result && (
+                                    <div className="flex items-center justify-between bg-purple-50 rounded-lg p-2">
+                                        <span className="text-sm">📝 Text</span>
+                                        <span className="text-sm font-medium capitalize">{result.text_result.emotion_label}</span>
+                                        <span className="text-xs text-gray-500">{(result.text_result.confidence_score * 100).toFixed(0)}%</span>
+                                        <span className="text-xs text-gray-400">w: {(result.text_result.weight * 100).toFixed(0)}%</span>
+                                    </div>
+                                )}
+                                {result.video_result && (
+                                    <div className="flex items-center justify-between bg-blue-50 rounded-lg p-2">
+                                        <span className="text-sm">📹 Video</span>
+                                        <span className="text-sm font-medium capitalize">{result.video_result.emotion_label}</span>
+                                        <span className="text-xs text-gray-500">{(result.video_result.confidence_score * 100).toFixed(0)}%</span>
+                                        <span className="text-xs text-gray-400">w: {(result.video_result.weight * 100).toFixed(0)}%</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

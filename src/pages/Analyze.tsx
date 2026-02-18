@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mic, Video, FileText, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mic, Video, FileText, Upload, Loader2, CheckCircle, AlertCircle, Layers } from 'lucide-react';
 import { ResultModal } from '../components/ResultModal';
 import { saveResult } from '../lib/storage';
 
@@ -20,6 +20,10 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
   const [success, setSuccess] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any | null>(null);
   const [showResultModal, setShowResultModal] = useState(false);
+  // Multimodal state
+  const [mmAudioFile, setMmAudioFile] = useState<File | null>(null);
+  const [mmVideoFile, setMmVideoFile] = useState<File | null>(null);
+  const [mmTextInput, setMmTextInput] = useState('');
 
   const handleInputTypeSelect = (type: InputType) => {
     setInputType(type);
@@ -144,6 +148,39 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
     };
   };
 
+  /**
+   * Send multiple inputs to the multimodal fusion endpoint.
+   */
+  const analyzeMultimodal = async (): Promise<any> => {
+    const formData = new FormData();
+    if (mmAudioFile) formData.append('audio_file', mmAudioFile);
+    if (mmVideoFile) formData.append('video_file', mmVideoFile);
+    if (mmTextInput.trim()) formData.append('text', mmTextInput.trim());
+
+    const response = await fetch(`${API_URL}/predict-multimodal`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Multimodal analysis failed');
+    }
+
+    const result = await response.json();
+    return {
+      emotion_label: result.emotion_label,
+      confidence_score: result.confidence_score,
+      all_probabilities: result.all_probabilities,
+      quality_warning: result.quality_warning,
+      fusion_method: result.fusion_method,
+      modalities_used: result.modalities_used,
+      audio_result: result.audio_result,
+      text_result: result.text_result,
+      video_result: result.video_result,
+    };
+  };
+
   const handleSubmit = async () => {
     if (!inputType) return;
 
@@ -157,36 +194,40 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
       return;
     }
 
+    // Multimodal validation: at least 2 inputs
+    if (inputType === 'multimodal') {
+      const count = [mmAudioFile, mmVideoFile, mmTextInput.trim()].filter(Boolean).length;
+      if (count < 2) {
+        setError('Please provide at least 2 types of input for multimodal analysis');
+        return;
+      }
+    }
+
     setProcessing(true);
     setError(null);
 
     try {
-      // Call the real API for emotion analysis based on input type
       let modelResult;
       if (inputType === 'audio') {
-        // Send audio to Python backend for audio emotion prediction
         modelResult = await analyzeAudio(file!);
       } else if (inputType === 'video') {
-        // Send video/image to Python backend for facial emotion prediction
         modelResult = await analyzeVideo(file!);
+      } else if (inputType === 'multimodal') {
+        modelResult = await analyzeMultimodal();
       } else {
-        // Send text to Python backend for text emotion prediction
         modelResult = await analyzeText(textInput);
       }
 
-      // Show the result (Supabase is currently unavailable)
       console.log('✅ Analysis Result:', modelResult);
 
-      // Save to local storage
       saveResult({
         input_type: inputType as 'audio' | 'video' | 'text',
-        filename: file?.name,
+        filename: file?.name || mmAudioFile?.name || mmVideoFile?.name,
         emotion_label: modelResult.emotion_label,
         confidence_score: modelResult.confidence_score,
         all_probabilities: modelResult.all_probabilities,
       });
 
-      // Display result in modal
       setAnalysisResult(modelResult);
       setShowResultModal(true);
       setSuccess(true);
@@ -205,6 +246,9 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
     setFile(null);
     setError(null);
     setSuccess(false);
+    setMmAudioFile(null);
+    setMmVideoFile(null);
+    setMmTextInput('');
   };
 
   return (
@@ -239,7 +283,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
         {step === 1 && (
           <div>
             <h3 className="text-2xl font-bold text-amber-100 mb-6">Step 1: Select Input Type</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <button
                 onClick={() => handleInputTypeSelect('audio')}
                 className="relative overflow-hidden bg-gradient-to-br from-teal-400 to-emerald-500 text-white rounded-2xl p-8 hover:scale-105 hover:shadow-xl shadow-lg shadow-teal-500/30 transition-all group"
@@ -275,6 +319,18 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                   Analyze text for emotional content
                 </p>
               </button>
+
+              <button
+                onClick={() => handleInputTypeSelect('multimodal')}
+                className="relative overflow-hidden bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl p-8 hover:scale-105 hover:shadow-xl shadow-lg shadow-amber-500/30 transition-all group"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
+                <Layers className="w-14 h-14 mx-auto mb-4 group-hover:scale-110 transition-transform" />
+                <h4 className="font-bold text-xl mb-2">Multimodal</h4>
+                <p className="text-white/80">
+                  Combine audio, text & video
+                </p>
+              </button>
             </div>
           </div>
         )}
@@ -283,7 +339,47 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
           <div>
             <h3 className="text-xl font-semibold text-amber-100 mb-4">Step 2: Provide Input</h3>
             <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-8">
-              {inputType === 'text' ? (
+              {inputType === 'multimodal' ? (
+                <div className="space-y-6">
+                  <p className="text-amber-200/70 text-sm">Provide at least 2 types of input for fusion analysis</p>
+
+                  {/* Audio Upload */}
+                  <div className="border border-amber-900/30 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-teal-400 mb-2">🎤 Audio (optional)</label>
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => setMmAudioFile(e.target.files?.[0] || null)}
+                      className="text-sm text-amber-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-600 file:text-white hover:file:bg-teal-700"
+                    />
+                    {mmAudioFile && <p className="mt-1 text-xs text-amber-200/60">✅ {mmAudioFile.name}</p>}
+                  </div>
+
+                  {/* Text Input */}
+                  <div className="border border-amber-900/30 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-purple-400 mb-2">📝 Text (optional)</label>
+                    <textarea
+                      value={mmTextInput}
+                      onChange={(e) => setMmTextInput(e.target.value)}
+                      rows={2}
+                      className="w-full px-4 py-2 bg-stone-700/50 border border-amber-900/30 rounded-lg text-amber-100 focus:ring-2 focus:ring-teal-500 text-sm"
+                      placeholder="Type text here..."
+                    />
+                  </div>
+
+                  {/* Video/Image Upload */}
+                  <div className="border border-amber-900/30 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-blue-400 mb-2">📹 Image/Video (optional)</label>
+                    <input
+                      type="file"
+                      accept="video/*,image/*"
+                      onChange={(e) => setMmVideoFile(e.target.files?.[0] || null)}
+                      className="text-sm text-amber-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                    />
+                    {mmVideoFile && <p className="mt-1 text-xs text-amber-200/60">✅ {mmVideoFile.name}</p>}
+                  </div>
+                </div>
+              ) : inputType === 'text' ? (
                 <div>
                   <label className="block text-sm font-medium text-amber-200 mb-2">
                     Enter text to analyze
@@ -291,17 +387,14 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                   <textarea
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
-                    rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    placeholder="Type or paste your text here..."
+                    rows={4}
+                    className="w-full px-4 py-3 bg-stone-700/50 border border-amber-900/30 rounded-lg text-amber-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    placeholder="Type or paste text here..."
                   />
                 </div>
               ) : (
-                <div>
-                  <label className="block text-sm font-medium text-amber-200 mb-2">
-                    Upload {inputType} file
-                  </label>
-                  <div className="border-2 border-dashed border-amber-700/50 rounded-xl p-8 text-center hover:border-amber-500 transition-colors bg-stone-800/30">
+                <div className="border-2 border-dashed border-amber-900/30 rounded-xl p-8 text-center">
+                  <div className="flex flex-col items-center">
                     <Upload className="w-12 h-12 text-amber-400 mx-auto mb-4" />
                     <input
                       type="file"
@@ -341,7 +434,8 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                   onClick={() => setStep(3)}
                   disabled={
                     (inputType === 'text' && !textInput.trim()) ||
-                    ((inputType === 'audio' || inputType === 'video') && !file)
+                    ((inputType === 'audio' || inputType === 'video') && !file) ||
+                    (inputType === 'multimodal' && [mmAudioFile, mmVideoFile, mmTextInput.trim()].filter(Boolean).length < 2)
                   }
                   className="flex-1 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -427,6 +521,9 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
               setStep(1);
               setInputType(null);
               setFile(null);
+              setMmAudioFile(null);
+              setMmVideoFile(null);
+              setMmTextInput('');
             }}
           />
         )

@@ -699,6 +699,24 @@ class HealthResponse(BaseModel):
     device: str
 
 
+class ModalityResult(BaseModel):
+    emotion_label: str
+    confidence_score: float
+    all_probabilities: Dict[str, float]
+    weight: float = 0.0
+
+
+class MultimodalPredictionResponse(BaseModel):
+    emotion_label: str
+    confidence_score: float
+    all_probabilities: Dict[str, float]
+    fusion_method: str = "adaptive_weighted"
+    modalities_used: List[str] = []
+    audio_result: Optional[ModalityResult] = None
+    text_result: Optional[ModalityResult] = None
+    video_result: Optional[ModalityResult] = None
+    quality_warning: Optional[str] = None
+
 # ============================================
 # ENDPOINTS
 # ============================================
@@ -873,6 +891,153 @@ async def predict_video(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Video prediction failed: {str(e)}")
 
 
+@app.post("/predict-multimodal", response_model=MultimodalPredictionResponse)
+async def predict_multimodal(
+    audio_file: Optional[UploadFile] = File(None),
+    video_file: Optional[UploadFile] = File(None),
+    text: Optional[str] = None,
+):
+    """
+    Multimodal emotion prediction: combine audio, text, and video/image inputs.
+    
+    At least 2 modalities must be provided.
+    Returns fused prediction with per-modality breakdowns.
+    """
+    modality_results = {}
+    warnings = []
+    
+    # --- Process Audio ---
+    if audio_file and audio_file.filename:
+        try:
+            audio_bytes = await audio_file.read()
+            if len(audio_bytes) > 0 and model_handler.emotion_model is not None:
+                # Clipping check
+                try:
+                    raw_audio, _ = model_handler.audio_processor.load_audio(audio_bytes)
+                    is_clipped, clip_pct = model_handler.audio_processor.check_clipping(raw_audio)
+                    if is_clipped:
+                        warnings.append(f"Audio clipping detected ({clip_pct:.1f}%)")
+                except:
+                    pass
+                
+                result = model_handler.predict(audio_bytes)
+                modality_results["audio"] = {
+                    "emotion_label": result["emotion_label"],
+                    "confidence_score": result["confidence_score"],
+                    "all_probabilities": result["all_probabilities"],
+                }
+        except Exception as e:
+            warnings.append(f"Audio processing failed: {str(e)}")
+    
+    # --- Process Text ---
+    if text and text.strip():
+        try:
+            if model_handler.text_model is not None:
+                word_count = len(text.strip().split())
+                if word_count < 3:
+                    warnings.append("Text is very short")
+                
+                result = model_handler.predict_text(text)
+                modality_results["text"] = {
+                    "emotion_label": result["emotion_label"],
+                    "confidence_score": result["confidence_score"],
+                    "all_probabilities": result["all_probabilities"],
+                }
+        except Exception as e:
+            warnings.append(f"Text processing failed: {str(e)}")
+    
+    # --- Process Video/Image ---
+    if video_file and video_file.filename:
+        try:
+            if video_handler is not None and video_handler.model is not None:
+                video_bytes = await video_file.read()
+                if len(video_bytes) > 0:
+                    file_ext = video_file.filename.rsplit(".", 1)[-1].lower() if video_file.filename else ""
+                    is_video = file_ext in ["mp4", "avi", "mov", "mkv", "webm"]
+                    
+                    if is_video:
+                        result = video_handler.process_video(video_bytes)
+                    else:
+                        result = video_handler.process_image(video_bytes)
+                    
+                    faces = result.get("faces_detected", 0)
+                    if faces == 0:
+                        warnings.append("No face detected in image")
+                    elif faces > 1:
+                        warnings.append(f"Multiple faces detected ({faces})")
+                    
+                    modality_results["video"] = {
+                        "emotion_label": result["emotion"],
+                        "confidence_score": result["confidence"],
+                        "all_probabilities": result.get("all_probabilities", {}),
+                    }
+        except Exception as e:
+            warnings.append(f"Video processing failed: {str(e)}")
+    
+    # --- Validate: at least 2 modalities ---
+    if len(modality_results) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail=f"At least 2 modalities required, got {len(modality_results)}: {list(modality_results.keys())}"
+        )
+    
+    # --- Adaptive Weighted Fusion ---
+    # Base weights for each modality
+    base_weights = {"audio": 0.4, "text": 0.2, "video": 0.4}
+    emotions = ["angry", "happy", "sad", "neutral"]
+    
+    fused_probs = {e: 0.0 for e in emotions}
+    total_weight = 0.0
+    
+    for modality, res in modality_results.items():
+        # Adaptive weight = base_weight * confidence (higher confidence = more influence)
+        confidence = res["confidence_score"]
+        adaptive_weight = base_weights.get(modality, 0.33) * confidence
+        total_weight += adaptive_weight
+        res["weight"] = adaptive_weight
+        
+        for emotion in emotions:
+            fused_probs[emotion] += res["all_probabilities"].get(emotion, 0.0) * adaptive_weight
+    
+    # Normalize
+    if total_weight > 0:
+        for emotion in emotions:
+            fused_probs[emotion] /= total_weight
+    
+    # Get final prediction
+    final_emotion = max(fused_probs, key=lambda e: fused_probs[e])
+    final_confidence = fused_probs[final_emotion]
+    
+    # Normalize weights for display
+    for modality, res in modality_results.items():
+        res["weight"] = res["weight"] / total_weight if total_weight > 0 else 0.0
+    
+    # Low confidence warning
+    if final_confidence < 0.5:
+        warnings.append("Low fused confidence - prediction may be inaccurate")
+    
+    # Build response
+    response = {
+        "emotion_label": final_emotion,
+        "confidence_score": final_confidence,
+        "all_probabilities": fused_probs,
+        "fusion_method": "adaptive_weighted",
+        "modalities_used": list(modality_results.keys()),
+    }
+    
+    if "audio" in modality_results:
+        response["audio_result"] = modality_results["audio"]
+    if "text" in modality_results:
+        response["text_result"] = modality_results["text"]
+    if "video" in modality_results:
+        response["video_result"] = modality_results["video"]
+    
+    if warnings:
+        response["quality_warning"] = "; ".join(warnings)
+    
+    return response
+
+
 # Startup message
 @app.on_event("startup")
 async def startup_event():
@@ -882,5 +1047,6 @@ async def startup_event():
     print(f"  Accent model: {'✅' if model_handler.accent_model else '❌'}")
     print(f"  Text model: {'✅' if model_handler.text_model else '❌'}")
     print(f"  Video model: {'✅' if video_handler and video_handler.model else '❌'}")
+    print(f"  Multimodal fusion: ✅")
     print("=" * 50)
 
