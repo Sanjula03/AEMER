@@ -58,33 +58,36 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
-            {/* Backdrop */}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop - clicking closes modal */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             />
 
-            {/* Modal */}
-            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in duration-300 max-h-[90vh] flex flex-col">
+            {/* Modal - stopPropagation prevents backdrop close when clicking modal */}
+            <div
+                className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header with gradient */}
                 <div
-                    className={`bg-gradient-to-r ${getEmotionColor(result.emotion_label)} p-6 text-white text-center`}
+                    className={`relative bg-gradient-to-r ${getEmotionColor(result.emotion_label)} p-6 text-white text-center shrink-0`}
                 >
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-1 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                        className="absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/40 transition-colors cursor-pointer z-10"
                     >
                         <X className="w-5 h-5" />
                     </button>
 
-                    <div className="text-6xl mb-3">{getEmotionEmoji(result.emotion_label)}</div>
-                    <h2 className="text-3xl font-bold capitalize">{result.emotion_label}</h2>
-                    <p className="text-white/80 mt-1">Detected Emotion</p>
+                    <div className="text-5xl mb-2">{getEmotionEmoji(result.emotion_label)}</div>
+                    <h2 className="text-2xl font-bold capitalize">{result.emotion_label}</h2>
+                    <p className="text-white/80 text-sm mt-1">Detected Emotion</p>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                {/* Scrollable Content */}
+                <div className="p-5 space-y-5 overflow-y-auto flex-1 min-h-0">
                     {/* Quality Warning */}
                     {result.quality_warning && (
                         <div className="flex items-start space-x-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -95,13 +98,13 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
 
                     {/* Confidence Score */}
                     <div className="text-center">
-                        <div className="text-sm text-gray-500 mb-2">Confidence Score</div>
-                        <div className={`text-4xl font-bold ${getConfidenceColor(result.confidence_score)}`}>
+                        <div className="text-sm text-gray-500 mb-1">Confidence Score</div>
+                        <div className={`text-3xl font-bold ${getConfidenceColor(result.confidence_score)}`}>
                             {(result.confidence_score * 100).toFixed(1)}%
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3 mt-3">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
                             <div
-                                className={`bg-gradient-to-r ${getEmotionColor(result.emotion_label)} h-3 rounded-full transition-all duration-500`}
+                                className={`bg-gradient-to-r ${getEmotionColor(result.emotion_label)} h-2.5 rounded-full transition-all duration-500`}
                                 style={{ width: `${result.confidence_score * 100}%` }}
                             />
                         </div>
@@ -110,24 +113,24 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                     {/* All Probabilities */}
                     {result.all_probabilities && Object.keys(result.all_probabilities).length > 0 && (
                         <div>
-                            <div className="text-sm text-gray-500 mb-3 text-center">All Emotion Probabilities</div>
-                            <div className="space-y-2">
+                            <div className="text-sm text-gray-500 mb-2 text-center">All Emotion Probabilities</div>
+                            <div className="space-y-1.5">
                                 {Object.entries(result.all_probabilities)
                                     .sort(([, a], [, b]) => b - a)
                                     .map(([emotion, probability]) => (
                                         <div key={emotion} className="flex items-center justify-between">
                                             <div className="flex items-center space-x-2">
-                                                <span className="text-xl">{getEmotionEmoji(emotion)}</span>
-                                                <span className="text-gray-700 capitalize font-medium">{emotion}</span>
+                                                <span className="text-lg">{getEmotionEmoji(emotion)}</span>
+                                                <span className="text-gray-700 capitalize font-medium text-sm">{emotion}</span>
                                             </div>
-                                            <div className="flex items-center space-x-3">
-                                                <div className="w-24 bg-gray-200 rounded-full h-2">
+                                            <div className="flex items-center space-x-2">
+                                                <div className="w-20 bg-gray-200 rounded-full h-2">
                                                     <div
                                                         className={`bg-gradient-to-r ${getEmotionColor(emotion)} h-2 rounded-full`}
                                                         style={{ width: `${probability * 100}%` }}
                                                     />
                                                 </div>
-                                                <span className="text-sm font-medium text-gray-600 w-14 text-right">
+                                                <span className="text-sm font-medium text-gray-600 w-12 text-right">
                                                     {(probability * 100).toFixed(1)}%
                                                 </span>
                                             </div>
@@ -140,10 +143,10 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                     {/* Multimodal Breakdown */}
                     {result.modalities_used && result.modalities_used.length > 1 && (
                         <div>
-                            <div className="text-sm text-gray-500 mb-3 text-center">
+                            <div className="text-sm text-gray-500 mb-2 text-center">
                                 Modality Breakdown ({result.fusion_method?.replace('_', ' ')})
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                                 {result.audio_result && (
                                     <div className="flex items-center justify-between bg-teal-50 rounded-lg p-2">
                                         <span className="text-sm">🎤 Audio</span>
@@ -171,11 +174,13 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                             </div>
                         </div>
                     )}
+                </div>
 
-                    {/* Close Button */}
+                {/* Fixed Close Button at bottom */}
+                <div className="p-4 border-t border-gray-100 shrink-0">
                     <button
                         onClick={onClose}
-                        className="w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                        className="w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors cursor-pointer"
                     >
                         Analyze Another
                     </button>
