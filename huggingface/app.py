@@ -14,7 +14,7 @@ import numpy as np
 import librosa
 import noisereduce as nr
 from scipy.signal import butter, sosfilt
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Optional, List, Tuple
@@ -895,7 +895,7 @@ async def predict_video(file: UploadFile = File(...)):
 async def predict_multimodal(
     audio_file: Optional[UploadFile] = File(None),
     video_file: Optional[UploadFile] = File(None),
-    text: Optional[str] = None,
+    text: Optional[str] = Form(None),
 ):
     """
     Multimodal emotion prediction: combine audio, text, and video/image inputs.
