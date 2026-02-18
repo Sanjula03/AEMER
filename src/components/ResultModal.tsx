@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { X, AlertTriangle } from 'lucide-react';
 
 interface ModalityResult {
@@ -57,7 +58,7 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
         return 'text-orange-600';
     };
 
-    return (
+    return createPortal(
         <div
             className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={onClose}
@@ -190,6 +191,7 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
