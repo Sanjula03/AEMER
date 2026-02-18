@@ -78,7 +78,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="relative text-center py-8 mt-8 text-amber-200/40 text-sm">
+      <footer className="text-center py-8 mt-8 text-amber-200/40 text-sm">
         <p>Built with 🎭 AI-Powered Emotion Recognition</p>
       </footer>
     </div>

@@ -58,17 +58,16 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* Backdrop - clicking closes modal */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
-            />
-
+        <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+            style={{ pointerEvents: 'auto' }}
+        >
             {/* Modal - stopPropagation prevents backdrop close when clicking modal */}
             <div
                 className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
             >
                 {/* Header with gradient */}
                 <div
