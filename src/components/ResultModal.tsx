@@ -57,7 +57,20 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
         const info: Record<string, { flag: string; label: string }> = {
             american: { flag: '🇺🇸', label: 'American' },
             british: { flag: '🇬🇧', label: 'British' },
+            australian: { flag: '🇦🇺', label: 'Australian' },
+            indian: { flag: '🇮🇳', label: 'Indian' },
             canadian: { flag: '🇨🇦', label: 'Canadian' },
+            scottish: { flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', label: 'Scottish' },
+            irish: { flag: '🇮🇪', label: 'Irish' },
+            african: { flag: '🌍', label: 'African' },
+            newzealand: { flag: '🇳🇿', label: 'New Zealand' },
+            welsh: { flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', label: 'Welsh' },
+            malaysian: { flag: '🇲🇾', label: 'Malaysian' },
+            filipino: { flag: '🇵🇭', label: 'Filipino' },
+            singaporean: { flag: '🇸🇬', label: 'Singaporean' },
+            hongkong: { flag: '🇭🇰', label: 'Hong Kong' },
+            bermudian: { flag: '🇧🇲', label: 'Bermudian' },
+            southatlantic: { flag: '🌊', label: 'South Atlantic' },
             south_asian: { flag: '🌏', label: 'South Asian' },
         };
         return info[accent.toLowerCase()] || { flag: '🌍', label: accent };

@@ -466,7 +466,12 @@ class ModelHandler:
     """Handle model loading and predictions."""
     
     EMOTIONS = ['angry', 'happy', 'sad', 'neutral']
-    ACCENTS = ['american', 'british', 'canadian', 'south_asian']
+    ACCENTS = [
+        'american', 'australian', 'bermudian', 'british', 'canadian',
+        'filipino', 'hongkong', 'indian', 'irish', 'malaysian',
+        'newzealand', 'scottish', 'singaporean', 'southatlantic', 'welsh',
+        'african'
+    ]
     
     def __init__(self, emotion_model_path: str = "best_model.pth", 
                  accent_model_path: str = "accent_model.pth",
@@ -509,7 +514,7 @@ class ModelHandler:
             return False
         
         try:
-            self.accent_model = CNN_BiLSTM_Accent(num_classes=4)
+            self.accent_model = CNN_BiLSTM_Accent(num_classes=len(self.ACCENTS))
             state_dict = torch.load(model_path, map_location=self.device, weights_only=False)
             if isinstance(state_dict, dict) and 'model_state_dict' in state_dict:
                 state_dict = state_dict['model_state_dict']
