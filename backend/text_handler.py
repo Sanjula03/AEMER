@@ -29,22 +29,31 @@ class TextEmotionClassifier(nn.Module):
     """
     DistilBERT-based text emotion classifier.
     Same architecture as training notebook.
+    Uses a deeper classifier head with BatchNorm for better generalization.
     """
     def __init__(self, num_classes=4, dropout=0.3):
         super().__init__()
         self.bert = DistilBertModel.from_pretrained('distilbert-base-uncased')
         self.dropout = nn.Dropout(dropout)
-        self.fc1 = nn.Linear(768, 256)
-        self.fc2 = nn.Linear(256, num_classes)
-        self.relu = nn.ReLU()
+        
+        # Deeper classifier head (must match training notebook)
+        self.classifier = nn.Sequential(
+            nn.Linear(768, 384),
+            nn.BatchNorm1d(384),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(384, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(128, num_classes)
+        )
     
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         cls_output = outputs.last_hidden_state[:, 0, :]
         x = self.dropout(cls_output)
-        x = self.relu(self.fc1(x))
-        x = self.dropout(x)
-        return self.fc2(x)
+        return self.classifier(x)
 
 
 class TextHandler:
