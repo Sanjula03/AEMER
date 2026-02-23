@@ -173,6 +173,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
       confidence_score: result.confidence_score,
       all_probabilities: result.all_probabilities,
       quality_warning: result.quality_warning,
+      detected_accent: result.audio_result?.detected_accent || null,
       fusion_method: result.fusion_method,
       modalities_used: result.modalities_used,
       audio_result: result.audio_result,

@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { X, AlertTriangle } from 'lucide-react';
+import { X, AlertTriangle, Globe } from 'lucide-react';
 
 interface ModalityResult {
     emotion_label: string;
@@ -13,9 +13,10 @@ interface EmotionResult {
     confidence_score: number;
     all_probabilities?: Record<string, number>;
     quality_warning?: string;
+    detected_accent?: string | null;
     fusion_method?: string;
     modalities_used?: string[];
-    audio_result?: ModalityResult;
+    audio_result?: ModalityResult & { detected_accent?: string | null };
     text_result?: ModalityResult;
     video_result?: ModalityResult;
 }
@@ -51,6 +52,19 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
         };
         return colors[emotion.toLowerCase()] || 'from-teal-400 to-teal-600';
     };
+
+    const getAccentInfo = (accent: string) => {
+        const info: Record<string, { flag: string; label: string }> = {
+            american: { flag: '🇺🇸', label: 'American' },
+            british: { flag: '🇬🇧', label: 'British' },
+            canadian: { flag: '🇨🇦', label: 'Canadian' },
+            south_asian: { flag: '🌏', label: 'South Asian' },
+        };
+        return info[accent.toLowerCase()] || { flag: '🌍', label: accent };
+    };
+
+    // Get accent from the result (direct for audio, from audio_result for multimodal)
+    const detectedAccent = result.detected_accent || result.audio_result?.detected_accent || null;
 
     const getConfidenceColor = (confidence: number) => {
         if (confidence >= 0.8) return 'text-green-600';
@@ -111,6 +125,20 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                             />
                         </div>
                     </div>
+
+                    {/* Accent Detection Badge */}
+                    {detectedAccent && (
+                        <div className="text-center">
+                            <div className="text-sm text-gray-500 mb-2">Detected Accent</div>
+                            <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl px-4 py-2.5">
+                                <Globe className="w-4 h-4 text-indigo-600" />
+                                <span className="text-2xl">{getAccentInfo(detectedAccent).flag}</span>
+                                <span className="text-base font-semibold text-indigo-800 capitalize">
+                                    {getAccentInfo(detectedAccent).label}
+                                </span>
+                            </div>
+                        </div>
+                    )}
 
                     {/* All Probabilities */}
                     {result.all_probabilities && Object.keys(result.all_probabilities).length > 0 && (
