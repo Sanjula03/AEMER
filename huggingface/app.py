@@ -30,9 +30,9 @@ except ImportError:
     CV2_AVAILABLE = False
     print("⚠️ opencv/torchvision not installed - video emotion disabled")
 
-# Conditional import - transformers may not be available
+# Conditional import - transformers for text emotion pipeline
 try:
-    from transformers import DistilBertTokenizer, DistilBertModel
+    from transformers import pipeline as hf_pipeline
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
@@ -47,10 +47,10 @@ class CNN_BiLSTM(nn.Module):
     """
     CNN + Bidirectional LSTM model for audio emotion recognition.
     Input: Log-Mel Spectrogram (1, 128, time_frames)
-    Output: 4 emotion classes (Angry, Happy, Sad, Neutral)
+    Output: 7 emotion classes (Angry, Happy, Sad, Neutral, Fear, Surprise, Disgust)
     """
     
-    def __init__(self, num_classes: int = 4):
+    def __init__(self, num_classes: int = 7):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
         self.bn1 = nn.BatchNorm2d(32)
@@ -112,39 +112,19 @@ class CNN_BiLSTM_Accent(nn.Module):
 
 
 # ============================================
-# TEXT EMOTION MODEL ARCHITECTURE
+# TEXT EMOTION MODEL (Pre-trained HuggingFace Pipeline)
 # ============================================
 
-if TRANSFORMERS_AVAILABLE:
-    class TextEmotionClassifier(nn.Module):
-        """
-        DistilBERT-based text emotion classifier.
-        Same architecture as training notebook.
-        Uses a deeper classifier head with BatchNorm for better generalization.
-        """
-        def __init__(self, num_classes=4, dropout=0.3):
-            super().__init__()
-            self.bert = DistilBertModel.from_pretrained('distilbert-base-uncased')
-            self.dropout = nn.Dropout(dropout)
-            
-            # Deeper classifier head (must match training notebook)
-            self.classifier = nn.Sequential(
-                nn.Linear(768, 384),
-                nn.BatchNorm1d(384),
-                nn.ReLU(),
-                nn.Dropout(dropout),
-                nn.Linear(384, 128),
-                nn.BatchNorm1d(128),
-                nn.ReLU(),
-                nn.Dropout(dropout),
-                nn.Linear(128, num_classes)
-            )
-        
-        def forward(self, input_ids, attention_mask):
-            outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-            cls_output = outputs.last_hidden_state[:, 0, :]
-            x = self.dropout(cls_output)
-            return self.classifier(x)
+# Map HuggingFace model labels to our consistent label names
+HF_LABEL_MAP = {
+    "anger": "angry",
+    "joy": "happy",
+    "sadness": "sad",
+    "neutral": "neutral",
+    "fear": "fear",
+    "surprise": "surprise",
+    "disgust": "disgust"
+}
 
 
 # ============================================
@@ -155,7 +135,7 @@ if CV2_AVAILABLE:
     class FacialEmotionResNet(nn.Module):
         """ResNet-18 based facial emotion classifier."""
         
-        def __init__(self, num_classes=4):
+        def __init__(self, num_classes=7):
             super().__init__()
             self.resnet = models.resnet18(pretrained=False)
             num_features = self.resnet.fc.in_features
@@ -173,7 +153,7 @@ if CV2_AVAILABLE:
     class VideoEmotionHandler:
         """Handles video emotion detection with face detection."""
         
-        EMOTIONS = ['angry', 'happy', 'sad', 'neutral']
+        EMOTIONS = ['angry', 'happy', 'sad', 'neutral', 'fear', 'surprise', 'disgust']
         
         def __init__(self, model_path: str = "video_model.pth"):
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -195,8 +175,14 @@ if CV2_AVAILABLE:
                 return False
             
             try:
-                self.model = FacialEmotionResNet(num_classes=4)
-                state_dict = torch.load(model_path, map_location=self.device, weights_only=False)
+                self.model = FacialEmotionResNet(num_classes=7)
+                checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
+                if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                    state_dict = checkpoint['model_state_dict']
+                elif isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+                    state_dict = checkpoint['state_dict']
+                else:
+                    state_dict = checkpoint
                 self.model.load_state_dict(state_dict)
                 self.model.to(self.device)
                 self.model.eval()
@@ -224,7 +210,7 @@ if CV2_AVAILABLE:
         
         def predict_emotion(self, face_img: np.ndarray) -> Tuple[str, float, Dict[str, float]]:
             if self.model is None:
-                return 'neutral', 0.25, {e: 0.25 for e in self.EMOTIONS}
+                return 'neutral', 1.0/7, {e: 1.0/7 for e in self.EMOTIONS}
             
             face_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
             pil_img = Image.fromarray(face_rgb)
@@ -236,7 +222,7 @@ if CV2_AVAILABLE:
                 idx = probs.argmax().item()
                 conf = probs[idx].item()
             
-            return self.EMOTIONS[idx], conf, {self.EMOTIONS[i]: probs[i].item() for i in range(4)}
+            return self.EMOTIONS[idx], conf, {self.EMOTIONS[i]: probs[i].item() for i in range(len(self.EMOTIONS))}
         
         def check_blur(self, frame: np.ndarray) -> Tuple[bool, float]:
             """Check if image is blurry using Laplacian variance."""
@@ -297,7 +283,7 @@ if CV2_AVAILABLE:
                 return {
                     'emotion': 'neutral',
                     'confidence': 0.0,
-                    'all_probabilities': {e: 0.25 for e in self.EMOTIONS},
+                    'all_probabilities': {e: 1.0/7 for e in self.EMOTIONS},
                     'faces_detected': 0,
                     'quality_warning': "; ".join(quality_issues)
                 }
@@ -465,25 +451,23 @@ class AudioProcessor:
 class ModelHandler:
     """Handle model loading and predictions."""
     
-    EMOTIONS = ['angry', 'happy', 'sad', 'neutral']
+    EMOTIONS = ['angry', 'happy', 'sad', 'neutral', 'fear', 'surprise', 'disgust']
     ACCENTS = [
         'american', 'british', 'australian', 'indian', 'canadian',
         'irish', 'african', 'filipino', 'hongkong'
     ]
     
     def __init__(self, emotion_model_path: str = "best_model.pth", 
-                 accent_model_path: str = "accent_model.pth",
-                 text_model_path: str = "text_model.pth"):
+                 accent_model_path: str = "accent_model.pth"):
         self.device = torch.device("cpu")
         self.emotion_model = None
         self.accent_model = None
         self.text_model = None
-        self.tokenizer = None
         self.audio_processor = AudioProcessor()
         
         self.load_emotion_model(emotion_model_path)
         self.load_accent_model(accent_model_path)
-        self.load_text_model(text_model_path)
+        self.load_text_model()
     
     def load_emotion_model(self, model_path: str) -> bool:
         """Load the emotion model."""
@@ -492,7 +476,7 @@ class ModelHandler:
             return False
         
         try:
-            self.emotion_model = CNN_BiLSTM(num_classes=4)
+            self.emotion_model = CNN_BiLSTM(num_classes=7)
             state_dict = torch.load(model_path, map_location=self.device, weights_only=False)
             if isinstance(state_dict, dict) and 'model_state_dict' in state_dict:
                 state_dict = state_dict['model_state_dict']
@@ -525,26 +509,20 @@ class ModelHandler:
             print(f"❌ Error loading accent model: {e}")
             return False
     
-    def load_text_model(self, model_path: str) -> bool:
-        """Load the text emotion model."""
+    def load_text_model(self, model_path: str = None) -> bool:
+        """Load the pre-trained HuggingFace text emotion pipeline."""
         if not TRANSFORMERS_AVAILABLE:
             print("⚠️ transformers not available - text model disabled")
             return False
-            
-        if not os.path.exists(model_path):
-            print(f"Warning: Text model not found at {model_path}")
-            return False
         
         try:
-            self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-            self.text_model = TextEmotionClassifier(num_classes=4)
-            state_dict = torch.load(model_path, map_location=self.device, weights_only=False)
-            if isinstance(state_dict, dict) and 'model_state_dict' in state_dict:
-                state_dict = state_dict['model_state_dict']
-            self.text_model.load_state_dict(state_dict)
-            self.text_model.to(self.device)
-            self.text_model.eval()
-            print(f"✅ Text emotion model loaded from {model_path}")
+            self.text_model = hf_pipeline(
+                "text-classification",
+                model="j-hartmann/emotion-english-distilroberta-base",
+                top_k=None,
+                truncation=True
+            )
+            print("✅ Text emotion model loaded (j-hartmann/emotion-english-distilroberta-base)")
             return True
         except Exception as e:
             print(f"❌ Error loading text model: {e}")
@@ -604,43 +582,31 @@ class ModelHandler:
         return result
     
     def predict_text(self, text: str) -> Dict:
-        """Predict emotion from text."""
+        """Predict emotion from text using HuggingFace pipeline."""
         result = {
             "emotion_label": "unknown",
             "confidence_score": 0.0,
             "all_probabilities": {}
         }
         
-        if self.text_model is None or self.tokenizer is None:
+        if self.text_model is None:
             return result
         
         try:
-            encoding = self.tokenizer(
-                text,
-                add_special_tokens=True,
-                max_length=128,
-                padding='max_length',
-                truncation=True,
-                return_attention_mask=True,
-                return_tensors='pt'
-            )
+            # Run HuggingFace pipeline
+            predictions = self.text_model(text)[0]
             
-            input_ids = encoding['input_ids'].to(self.device)
-            attention_mask = encoding['attention_mask'].to(self.device)
+            # Map labels and build probabilities
+            all_probs = {}
+            for item in predictions:
+                our_label = HF_LABEL_MAP.get(item["label"], item["label"])
+                all_probs[our_label] = float(item["score"])
             
-            with torch.no_grad():
-                outputs = self.text_model(input_ids, attention_mask)
-                probabilities = F.softmax(outputs, dim=1).squeeze()
+            top_label = max(all_probs, key=all_probs.get)
             
-            probs_np = probabilities.cpu().numpy()
-            emotion_idx = int(np.argmax(probs_np))
-            
-            result["emotion_label"] = self.EMOTIONS[emotion_idx]
-            result["confidence_score"] = float(probs_np[emotion_idx])
-            result["all_probabilities"] = {
-                emotion: float(probs_np[i])
-                for i, emotion in enumerate(self.EMOTIONS)
-            }
+            result["emotion_label"] = top_label
+            result["confidence_score"] = all_probs[top_label]
+            result["all_probabilities"] = all_probs
         except Exception as e:
             print(f"Text prediction error: {e}")
         
@@ -996,7 +962,7 @@ async def predict_multimodal(
     # --- Adaptive Weighted Fusion ---
     # Base weights for each modality
     base_weights = {"audio": 0.4, "text": 0.2, "video": 0.4}
-    emotions = ["angry", "happy", "sad", "neutral"]
+    emotions = ["angry", "happy", "sad", "neutral", "fear", "surprise", "disgust"]
     
     fused_probs = {e: 0.0 for e in emotions}
     total_weight = 0.0

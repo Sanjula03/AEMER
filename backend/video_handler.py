@@ -17,13 +17,13 @@ from typing import List, Tuple, Dict, Optional
 
 
 # Emotion labels (same order as training)
-EMOTIONS = ['angry', 'happy', 'sad', 'neutral']
+EMOTIONS = ['angry', 'happy', 'sad', 'neutral', 'fear', 'surprise', 'disgust']
 
 
 class FacialEmotionResNet(nn.Module):
     """ResNet-18 based facial emotion classifier (same as training)."""
     
-    def __init__(self, num_classes=4):
+    def __init__(self, num_classes=7):
         super().__init__()
         self.resnet = models.resnet18(pretrained=False)
         num_features = self.resnet.fc.in_features
@@ -67,8 +67,17 @@ class VideoEmotionHandler:
                 print(f"⚠️ Video model not found at {model_path}")
                 return False
             
-            self.model = FacialEmotionResNet(num_classes=4)
-            state_dict = torch.load(model_path, map_location=self.device)
+            self.model = FacialEmotionResNet(num_classes=7)
+            checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
+            
+            # Handle different checkpoint formats
+            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                state_dict = checkpoint['model_state_dict']
+            elif isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+                state_dict = checkpoint['state_dict']
+            else:
+                state_dict = checkpoint
+            
             self.model.load_state_dict(state_dict)
             self.model.to(self.device)
             self.model.eval()
@@ -135,7 +144,7 @@ class VideoEmotionHandler:
     def predict_emotion(self, face_tensor: torch.Tensor) -> Tuple[str, float, Dict[str, float]]:
         """Predict emotion from preprocessed face tensor."""
         if self.model is None:
-            return 'neutral', 0.25, {e: 0.25 for e in EMOTIONS}
+            return 'neutral', 1.0/7, {e: 1.0/7 for e in EMOTIONS}
         
         with torch.no_grad():
             outputs = self.model(face_tensor)
@@ -264,7 +273,7 @@ class VideoEmotionHandler:
             return {
                 'emotion': 'neutral',
                 'confidence': 0.0,
-                'all_probabilities': {e: 0.25 for e in EMOTIONS},
+                'all_probabilities': {e: 1.0/7 for e in EMOTIONS},
                 'faces_detected': 0,
                 'warning': 'No face detected in image'
             }

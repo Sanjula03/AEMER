@@ -64,6 +64,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       sad: '😢',
       angry: '😠',
       neutral: '😐',
+      fear: '😨',
+      surprise: '😲',
+      disgust: '🤢',
     };
     return emojis[emotion.toLowerCase()] || '🎭';
   };
@@ -74,6 +77,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       sad: 'from-blue-400 via-indigo-500 to-purple-600',
       angry: 'from-red-400 via-rose-500 to-pink-600',
       neutral: 'from-gray-400 via-slate-500 to-gray-600',
+      fear: 'from-purple-400 via-violet-500 to-indigo-600',
+      surprise: 'from-pink-400 via-fuchsia-500 to-rose-600',
+      disgust: 'from-green-400 via-emerald-500 to-teal-600',
     };
     return gradients[emotion.toLowerCase()] || 'from-teal-400 to-blue-500';
   };

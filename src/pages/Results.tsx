@@ -66,6 +66,9 @@ export function Results() {
       sad: '😢',
       angry: '😠',
       neutral: '😐',
+      fear: '😨',
+      surprise: '😲',
+      disgust: '🤢',
     };
     return emojis[emotion.toLowerCase()] || '🎭';
   };
@@ -76,6 +79,9 @@ export function Results() {
       sad: 'text-blue-600 bg-blue-50 border-blue-200',
       angry: 'text-red-600 bg-red-50 border-red-200',
       neutral: 'text-gray-600 bg-gray-50 border-gray-200',
+      fear: 'text-purple-600 bg-purple-50 border-purple-200',
+      surprise: 'text-pink-600 bg-pink-50 border-pink-200',
+      disgust: 'text-green-600 bg-green-50 border-green-200',
     };
     return colors[emotion.toLowerCase()] || colors.neutral;
   };

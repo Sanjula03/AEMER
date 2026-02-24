@@ -1,103 +1,77 @@
 """
 Text Handler for AEMER
-Loads the DistilBERT text emotion model and handles predictions.
+Uses pre-trained j-hartmann/emotion-english-distilroberta-base model
+for 7-emotion text classification.
 
 Emotion Classes:
-- 0: angry
-- 1: happy
-- 2: sad
-- 3: neutral
+- angry
+- happy (joy)
+- sad (sadness)
+- neutral
+- fear
+- surprise
+- disgust
+
+No custom model training needed - uses HuggingFace pre-trained model directly.
 """
 
-import torch
-import torch.nn as nn
-from transformers import DistilBertTokenizer, DistilBertModel
 import os
 from typing import Tuple, Dict
+from transformers import pipeline
 
 
-# Emotion class mapping
+# Map HuggingFace model labels to our consistent label names
+HF_LABEL_MAP = {
+    "anger": "angry",
+    "joy": "happy",
+    "sadness": "sad",
+    "neutral": "neutral",
+    "fear": "fear",
+    "surprise": "surprise",
+    "disgust": "disgust"
+}
+
+# Our emotion labels (consistent ordering across all models)
 TEXT_EMOTION_LABELS = {
     0: "angry",
     1: "happy",
     2: "sad",
-    3: "neutral"
+    3: "neutral",
+    4: "fear",
+    5: "surprise",
+    6: "disgust"
 }
 
 
-class TextEmotionClassifier(nn.Module):
-    """
-    DistilBERT-based text emotion classifier.
-    Same architecture as training notebook.
-    Uses a deeper classifier head with BatchNorm for better generalization.
-    """
-    def __init__(self, num_classes=4, dropout=0.3):
-        super().__init__()
-        self.bert = DistilBertModel.from_pretrained('distilbert-base-uncased')
-        self.dropout = nn.Dropout(dropout)
-        
-        # Deeper classifier head (must match training notebook)
-        self.classifier = nn.Sequential(
-            nn.Linear(768, 384),
-            nn.BatchNorm1d(384),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(384, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(128, num_classes)
-        )
-    
-    def forward(self, input_ids, attention_mask):
-        outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        cls_output = outputs.last_hidden_state[:, 0, :]
-        x = self.dropout(cls_output)
-        return self.classifier(x)
-
-
 class TextHandler:
-    """Handles loading and running the text emotion model."""
-    
-    MAX_LEN = 128
+    """Handles text emotion prediction using pre-trained HuggingFace model."""
     
     def __init__(self, model_path: str = None):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = None
-        self.tokenizer = None
+        """
+        Initialize the text handler.
         
-        if model_path:
-            self.load_model(model_path)
+        Args:
+            model_path: Ignored (kept for backward compatibility).
+                        Model loads from HuggingFace directly.
+        """
+        self.classifier = None
+        self.load_model()
     
-    def load_model(self, model_path: str) -> bool:
-        """Load the trained text emotion model."""
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Text model not found: {model_path}")
-        
-        print(f"Loading text emotion model from: {model_path}")
-        
+    def load_model(self, model_path: str = None) -> bool:
+        """Load the pre-trained HuggingFace emotion model."""
         try:
-            # Load tokenizer
-            self.tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-            
-            # Load model
-            self.model = TextEmotionClassifier(num_classes=4)
-            state_dict = torch.load(model_path, map_location=self.device, weights_only=False)
-            
-            # Handle different checkpoint formats
-            if isinstance(state_dict, dict) and 'model_state_dict' in state_dict:
-                state_dict = state_dict['model_state_dict']
-            
-            self.model.load_state_dict(state_dict)
-            self.model = self.model.to(self.device)
-            self.model.eval()
-            
-            print("Text emotion model loaded successfully!")
+            print("Loading pre-trained text emotion model from HuggingFace...")
+            self.classifier = pipeline(
+                "text-classification",
+                model="j-hartmann/emotion-english-distilroberta-base",
+                top_k=None,  # Return all emotion scores
+                truncation=True
+            )
+            print("✅ Text emotion model loaded successfully (j-hartmann/emotion-english-distilroberta-base)")
             return True
-            
         except Exception as e:
-            print(f"Error loading text model: {e}")
-            raise
+            print(f"❌ Error loading text model: {e}")
+            return False
     
     def predict(self, text: str) -> Tuple[str, float, Dict[str, float]]:
         """
@@ -109,58 +83,40 @@ class TextHandler:
         Returns:
             Tuple of (predicted_emotion, confidence, all_probabilities)
         """
-        if self.model is None or self.tokenizer is None:
+        if self.classifier is None:
             raise RuntimeError("Text model not loaded.")
         
-        # Tokenize
-        encoding = self.tokenizer(
-            text,
-            add_special_tokens=True,
-            max_length=self.MAX_LEN,
-            padding='max_length',
-            truncation=True,
-            return_attention_mask=True,
-            return_tensors='pt'
-        )
+        # Run prediction (returns list of dicts with label + score)
+        results = self.classifier(text)[0]
         
-        input_ids = encoding['input_ids'].to(self.device)
-        attention_mask = encoding['attention_mask'].to(self.device)
+        # Map HF labels to our labels and build probabilities dict
+        all_probs = {}
+        for item in results:
+            our_label = HF_LABEL_MAP.get(item["label"], item["label"])
+            all_probs[our_label] = float(item["score"])
         
-        # Predict
-        with torch.no_grad():
-            outputs = self.model(input_ids, attention_mask)
-            probabilities = torch.softmax(outputs, dim=1).squeeze()
-            confidence, predicted_idx = torch.max(probabilities, 0)
-            predicted_idx = predicted_idx.item()
-            confidence = confidence.item()
+        # Find the top prediction
+        top_label = max(all_probs, key=all_probs.get)
+        confidence = all_probs[top_label]
         
-        emotion_label = TEXT_EMOTION_LABELS.get(predicted_idx, "unknown")
-        all_probs = {
-            TEXT_EMOTION_LABELS[i]: float(probabilities[i])
-            for i in range(len(TEXT_EMOTION_LABELS))
-        }
-        
-        return emotion_label, confidence, all_probs
+        return top_label, confidence, all_probs
 
 
 # Test
 if __name__ == "__main__":
-    model_path = "../TextModel/text_model.pth"
+    handler = TextHandler()
     
-    if os.path.exists(model_path):
-        handler = TextHandler(model_path)
-        
-        # Test with sample texts
-        test_texts = [
-            "I'm so happy today!",
-            "This is terrible, I'm furious!",
-            "I feel so sad and lonely...",
-            "The meeting is at 3 PM."
-        ]
-        
-        print("\nTest predictions:")
-        for text in test_texts:
-            emotion, conf, probs = handler.predict(text)
-            print(f"  '{text[:30]}...' → {emotion} ({conf:.2%})")
-    else:
-        print(f"Model not found: {model_path}")
+    test_texts = [
+        "I'm so happy today!",
+        "This is terrible, I'm furious!",
+        "I feel so sad and lonely...",
+        "The meeting is at 3 PM.",
+        "I'm really scared about the exam tomorrow.",
+        "Wow, I can't believe that just happened!",
+        "That food was absolutely revolting.",
+    ]
+    
+    print("\nTest predictions:")
+    for text in test_texts:
+        emotion, conf, probs = handler.predict(text)
+        print(f"  '{text[:40]}...' → {emotion} ({conf:.2%})")

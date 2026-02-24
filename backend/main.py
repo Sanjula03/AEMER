@@ -60,12 +60,7 @@ ACCENT_MODEL_PATH = os.path.join(
     "accent_model.pth"
 )
 
-# Path to the text emotion model
-TEXT_MODEL_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "TextModel",
-    "text_model.pth"
-)
+# Text emotion model now loads from HuggingFace directly (no .pth file needed)
 
 # Path to the video emotion model
 VIDEO_MODEL_PATH = os.path.join(
@@ -141,15 +136,12 @@ async def startup_event():
     else:
         print(f"⚠️ Accent model not found at: {ACCENT_MODEL_PATH}")
     
-    # Load text emotion model
-    if os.path.exists(TEXT_MODEL_PATH):
-        try:
-            text_handler = TextHandler(TEXT_MODEL_PATH)
-            print(f"✅ Text emotion model loaded from: {TEXT_MODEL_PATH}")
-        except Exception as e:
-            print(f"❌ Failed to load text model: {e}")
-    else:
-        print(f"⚠️ Text model not found at: {TEXT_MODEL_PATH}")
+    # Load text emotion model (from HuggingFace pre-trained)
+    try:
+        text_handler = TextHandler()
+        print(f"✅ Text emotion model loaded (HuggingFace pre-trained)")
+    except Exception as e:
+        print(f"❌ Failed to load text model: {e}")
     
     # Load video emotion model
     if os.path.exists(VIDEO_MODEL_PATH):
@@ -186,7 +178,7 @@ async def health_check():
         status="healthy",
         model_loaded=model_handler is not None and model_handler.model is not None,
         accent_model_loaded=accent_handler is not None and accent_handler.model is not None,
-        text_model_loaded=text_handler is not None and text_handler.model is not None,
+        text_model_loaded=text_handler is not None and text_handler.classifier is not None,
         video_model_loaded=video_handler is not None and video_handler.model is not None,
         device="cuda" if torch.cuda.is_available() else "cpu"
     )
@@ -293,7 +285,7 @@ async def predict_text_emotion(request: TextPredictionRequest):
     Returns:
         TextPredictionResponse with emotion prediction
     """
-    if text_handler is None or text_handler.model is None:
+    if text_handler is None or text_handler.classifier is None:
         raise HTTPException(
             status_code=503,
             detail="Text emotion model not loaded."

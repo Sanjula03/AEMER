@@ -7,6 +7,9 @@ Emotion Classes:
 - 1: Happy
 - 2: Sad
 - 3: Neutral
+- 4: Fear
+- 5: Surprise
+- 6: Disgust
 """
 
 import torch
@@ -20,7 +23,10 @@ EMOTION_LABELS = {
     0: "angry",
     1: "happy",
     2: "sad",
-    3: "neutral"
+    3: "neutral",
+    4: "fear",
+    5: "surprise",
+    6: "disgust"
 }
 
 
@@ -30,10 +36,10 @@ class CNN_BiLSTM(nn.Module):
     
     This is the EXACT architecture from your training code.
     Input: Log-Mel Spectrogram (1, 128, time_frames)
-    Output: 4 emotion classes (Angry, Happy, Sad, Neutral)
+    Output: 7 emotion classes (Angry, Happy, Sad, Neutral, Fear, Surprise, Disgust)
     """
     
-    def __init__(self, num_classes: int = 4):
+    def __init__(self, num_classes: int = 7):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, padding=1)
         self.bn1 = nn.BatchNorm2d(32)
@@ -112,7 +118,7 @@ class ModelHandler:
                     state_dict = checkpoint
                 
                 # Create model and load state dict
-                self.model = CNN_BiLSTM(num_classes=4)
+                self.model = CNN_BiLSTM(num_classes=7)
                 self.model.load_state_dict(state_dict)
             else:
                 # It's a full model

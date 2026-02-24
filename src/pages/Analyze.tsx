@@ -134,7 +134,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
       emotion_label: result.emotion,
       confidence_score: result.confidence,
       all_probabilities: result.all_probabilities || {
-        angry: 0.25, happy: 0.25, sad: 0.25, neutral: 0.25
+        angry: 1 / 7, happy: 1 / 7, sad: 1 / 7, neutral: 1 / 7, fear: 1 / 7, surprise: 1 / 7, disgust: 1 / 7
       },
       faces_detected: result.faces_detected || 0,
       quality_warning: result.quality_warning,  // Pass through quality warning
