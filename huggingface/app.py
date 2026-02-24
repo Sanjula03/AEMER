@@ -467,10 +467,8 @@ class ModelHandler:
     
     EMOTIONS = ['angry', 'happy', 'sad', 'neutral']
     ACCENTS = [
-        'american', 'australian', 'bermudian', 'british', 'canadian',
-        'filipino', 'hongkong', 'indian', 'irish', 'malaysian',
-        'newzealand', 'scottish', 'singaporean', 'southatlantic', 'welsh',
-        'african'
+        'american', 'british', 'australian', 'indian', 'canadian',
+        'irish', 'african', 'filipino', 'hongkong'
     ]
     
     def __init__(self, emotion_model_path: str = "best_model.pth", 
