@@ -65,7 +65,8 @@ class TextHandler:
                 "text-classification",
                 model="j-hartmann/emotion-english-distilroberta-base",
                 top_k=None,  # Return all emotion scores
-                truncation=True
+                truncation=True,
+                model_kwargs={"use_safetensors": True}
             )
             print("✅ Text emotion model loaded successfully (j-hartmann/emotion-english-distilroberta-base)")
             return True

@@ -520,7 +520,8 @@ class ModelHandler:
                 "text-classification",
                 model="j-hartmann/emotion-english-distilroberta-base",
                 top_k=None,
-                truncation=True
+                truncation=True,
+                model_kwargs={"use_safetensors": True}
             )
             print("✅ Text emotion model loaded (j-hartmann/emotion-english-distilroberta-base)")
             return True
