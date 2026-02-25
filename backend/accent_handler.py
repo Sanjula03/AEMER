@@ -2,11 +2,16 @@
 Accent Handler for AEMER
 Loads the accent detection model and handles predictions.
 
-Accent Classes:
+Accent Classes (9):
 - 0: American
 - 1: British
-- 2: Canadian
-- 3: South Asian
+- 2: Australian
+- 3: Indian
+- 4: Canadian
+- 5: Irish
+- 6: African
+- 7: Filipino
+- 8: Hong Kong
 """
 
 import torch
@@ -18,12 +23,17 @@ import os
 from typing import Tuple, Dict
 
 
-# Accent class mapping
+# Accent class mapping (must match training order)
 ACCENT_LABELS = {
     0: "american",
     1: "british",
-    2: "canadian",
-    3: "south_asian"
+    2: "australian",
+    3: "indian",
+    4: "canadian",
+    5: "irish",
+    6: "african",
+    7: "filipino",
+    8: "hongkong"
 }
 
 
@@ -33,7 +43,7 @@ class CNN_BiLSTM_Accent(nn.Module):
     Same architecture as training notebook.
     """
     
-    def __init__(self, num_classes=4):
+    def __init__(self, num_classes=9):
         super().__init__()
         self.conv1 = nn.Sequential(nn.Conv2d(1, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(), nn.MaxPool2d(2), nn.Dropout(0.2))
         self.conv2 = nn.Sequential(nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(), nn.MaxPool2d(2), nn.Dropout(0.2))
@@ -55,7 +65,7 @@ class AccentHandler:
     
     # Audio processing parameters (match training)
     SAMPLE_RATE = 16000
-    DURATION = 3
+    DURATION = 5
     N_MELS = 128
     N_FFT = 1024
     HOP_LENGTH = 160
@@ -84,7 +94,7 @@ class AccentHandler:
                     state_dict = checkpoint['model_state_dict']
                 else:
                     state_dict = checkpoint
-                self.model = CNN_BiLSTM_Accent(num_classes=4)
+                self.model = CNN_BiLSTM_Accent(num_classes=len(ACCENT_LABELS))
                 self.model.load_state_dict(state_dict)
             else:
                 self.model = checkpoint
