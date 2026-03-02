@@ -222,11 +222,31 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
       console.log('✅ Analysis Result:', modelResult);
 
       saveResult({
-        input_type: inputType as 'audio' | 'video' | 'text',
+        input_type: inputType as 'audio' | 'video' | 'text' | 'multimodal',
         filename: file?.name || mmAudioFile?.name || mmVideoFile?.name,
         emotion_label: modelResult.emotion_label,
         confidence_score: modelResult.confidence_score,
         all_probabilities: modelResult.all_probabilities,
+        detected_accent: modelResult.detected_accent || null,
+        quality_warning: modelResult.quality_warning,
+        fusion_method: modelResult.fusion_method,
+        modalities_used: modelResult.modalities_used,
+        audio_result: modelResult.audio_result ? {
+          emotion_label: modelResult.audio_result.emotion_label,
+          confidence_score: modelResult.audio_result.confidence_score,
+          weight: modelResult.audio_result.weight || 1.0,
+          detected_accent: modelResult.audio_result.detected_accent,
+        } : undefined,
+        text_result: modelResult.text_result ? {
+          emotion_label: modelResult.text_result.emotion_label,
+          confidence_score: modelResult.text_result.confidence_score,
+          weight: modelResult.text_result.weight || 1.0,
+        } : undefined,
+        video_result: modelResult.video_result ? {
+          emotion_label: modelResult.video_result.emotion_label,
+          confidence_score: modelResult.video_result.confidence_score,
+          weight: modelResult.video_result.weight || 1.0,
+        } : undefined,
       });
 
       setAnalysisResult(modelResult);

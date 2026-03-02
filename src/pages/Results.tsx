@@ -1,11 +1,34 @@
 import { useEffect, useState } from 'react';
-import { Download, Calendar, Trash2, RefreshCw } from 'lucide-react';
+import {
+  Download, Calendar, Trash2, RefreshCw, Globe, ChevronDown, ChevronUp,
+  AlertTriangle, Shield, Phone, Heart, Brain, Activity, FileJson
+} from 'lucide-react';
 import { getStoredResults, deleteResult, clearResults, type AnalysisResult } from '../lib/storage';
+import { RadarChart } from '../components/RadarChart';
+import { EmotionGauge } from '../components/EmotionGauge';
+import {
+  getMentalStateSummary,
+  getEmotionalValence,
+  getValenceInfo,
+  getArousalLevel,
+  getArousalInfo,
+  getWellbeingIndicator,
+  getConfidenceLabel,
+  getCopingStrategies,
+  getContextualTips,
+  getHelplineInfo,
+  getDominantAndSecondary,
+  getModalityAgreement,
+  DISCLAIMER_TEXT,
+} from '../lib/emotionInsights';
 
 export function Results() {
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showMetadata, setShowMetadata] = useState(false);
+  const [showHelplines, setShowHelplines] = useState(false);
+  const [showRawJson, setShowRawJson] = useState(false);
 
   useEffect(() => {
     loadAnalyses();
@@ -34,56 +57,127 @@ export function Results() {
     }
   };
 
-  const handleExport = (format: 'json' | 'csv') => {
+  const handleExportJSON = () => {
+    if (!selectedAnalysis) return;
+    const dataStr = JSON.stringify(selectedAnalysis, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `emotion-report-${selectedAnalysis.id.slice(0, 8)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportReport = () => {
     if (!selectedAnalysis) return;
 
-    if (format === 'json') {
-      const dataStr = JSON.stringify(selectedAnalysis, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `analysis-${selectedAnalysis.id.slice(0, 8)}.json`;
-      link.click();
-    } else if (format === 'csv') {
-      const headers = Object.keys(selectedAnalysis).join(',');
-      const values = Object.values(selectedAnalysis).map(v =>
-        typeof v === 'string' ? `"${v}"` : v
-      ).join(',');
-      const csv = `${headers}\n${values}`;
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `analysis-${selectedAnalysis.id.slice(0, 8)}.csv`;
-      link.click();
-    }
+    // Build a comprehensive text report
+    const wellbeing = getWellbeingIndicator(selectedAnalysis.emotion_label, selectedAnalysis.confidence_score);
+    const summary = getMentalStateSummary(selectedAnalysis.emotion_label, selectedAnalysis.confidence_score, selectedAnalysis.modalities_used);
+    const valence = getEmotionalValence(selectedAnalysis.emotion_label);
+    const arousal = getArousalLevel(selectedAnalysis.emotion_label);
+    const strategies = getCopingStrategies(selectedAnalysis.emotion_label);
+
+    const report = `
+╔══════════════════════════════════════════════════════════════╗
+║                    AEMER EMOTION REPORT                      ║
+║            Accent-Aware Emotion Recognition                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+Generated: ${new Date(selectedAnalysis.timestamp).toLocaleString()}
+Report ID: ${selectedAnalysis.id}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 EMOTION ANALYSIS RESULT
+─────────────────────────────────────────────────────────
+  Detected Emotion:  ${selectedAnalysis.emotion_label.toUpperCase()}
+  Confidence Score:  ${(selectedAnalysis.confidence_score * 100).toFixed(1)}% (${getConfidenceLabel(selectedAnalysis.confidence_score)})
+  Input Type:        ${selectedAnalysis.input_type}
+  ${selectedAnalysis.detected_accent ? `Detected Accent:   ${selectedAnalysis.detected_accent}` : ''}
+  ${selectedAnalysis.filename ? `File:              ${selectedAnalysis.filename}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧠 MENTAL STATE SUMMARY
+─────────────────────────────────────────────────────────
+  ${summary}
+
+  Emotional Valence:  ${valence.toUpperCase()}
+  Arousal Level:      ${arousal.toUpperCase()}
+  Well-being Status:  ${wellbeing.emoji} ${wellbeing.label}
+  ${wellbeing.description}
+
+${selectedAnalysis.all_probabilities ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 EMOTION PROBABILITIES
+─────────────────────────────────────────────────────────
+${Object.entries(selectedAnalysis.all_probabilities)
+          .sort(([, a], [, b]) => b - a)
+          .map(([emo, prob]) => `  ${emo.padEnd(12)} ${('█'.repeat(Math.round(prob * 20))).padEnd(20)} ${(prob * 100).toFixed(1)}%`)
+          .join('\n')}` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💚 COPING STRATEGIES
+─────────────────────────────────────────────────────────
+${strategies.map((s, i) => `  ${i + 1}. ${s.icon} ${s.title}\n     ${s.description}`).join('\n\n')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ DISCLAIMER
+─────────────────────────────────────────────────────────
+  ${DISCLAIMER_TEXT}
+
+══════════════════════════════════════════════════════════════
+  Generated by AEMER — Accent-Aware Emotion Recognition
+══════════════════════════════════════════════════════════════
+`.trim();
+
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `AEMER-Report-${selectedAnalysis.id.slice(0, 8)}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const getEmotionEmoji = (emotion: string) => {
     const emojis: Record<string, string> = {
-      happy: '😊',
-      sad: '😢',
-      angry: '😠',
-      neutral: '😐',
-      fear: '😨',
-      surprise: '😲',
-      disgust: '🤢',
+      happy: '😊', sad: '😢', angry: '😠', neutral: '😐',
+      fear: '😨', surprise: '😲', disgust: '🤢',
     };
     return emojis[emotion.toLowerCase()] || '🎭';
   };
 
-  const getEmotionColor = (emotion: string) => {
+  const getEmotionGradient = (emotion: string) => {
     const colors: Record<string, string> = {
-      happy: 'text-yellow-600 bg-yellow-50 border-yellow-200',
-      sad: 'text-blue-600 bg-blue-50 border-blue-200',
-      angry: 'text-red-600 bg-red-50 border-red-200',
-      neutral: 'text-gray-600 bg-gray-50 border-gray-200',
-      fear: 'text-purple-600 bg-purple-50 border-purple-200',
-      surprise: 'text-pink-600 bg-pink-50 border-pink-200',
-      disgust: 'text-green-600 bg-green-50 border-green-200',
+      happy: 'from-yellow-400 to-orange-500',
+      sad: 'from-blue-400 to-blue-600',
+      angry: 'from-red-400 to-red-600',
+      neutral: 'from-gray-400 to-gray-600',
+      fear: 'from-purple-400 to-purple-600',
+      surprise: 'from-pink-400 to-pink-600',
+      disgust: 'from-green-400 to-green-600',
     };
-    return colors[emotion.toLowerCase()] || colors.neutral;
+    return colors[emotion.toLowerCase()] || 'from-teal-400 to-teal-600';
+  };
+
+  const getAccentInfo = (accent: string) => {
+    const info: Record<string, { flag: string; label: string }> = {
+      american: { flag: '🇺🇸', label: 'American' },
+      british: { flag: '🇬🇧', label: 'British' },
+      australian: { flag: '🇦🇺', label: 'Australian' },
+      indian: { flag: '🇮🇳', label: 'Indian' },
+      canadian: { flag: '🇨🇦', label: 'Canadian' },
+      scottish: { flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', label: 'Scottish' },
+      irish: { flag: '🇮🇪', label: 'Irish' },
+      african: { flag: '🌍', label: 'African' },
+      newzealand: { flag: '🇳🇿', label: 'New Zealand' },
+    };
+    return info[accent.toLowerCase()] || { flag: '🌍', label: accent };
   };
 
   if (loading) {
@@ -99,40 +193,53 @@ export function Results() {
       <div className="text-center py-12">
         <div className="text-6xl mb-4">📊</div>
         <h3 className="text-xl font-semibold text-amber-100 mb-2">No Results Yet</h3>
-        <p className="text-amber-200/60">Upload an audio file in the Analyze tab to see your results here.</p>
+        <p className="text-amber-200/60">Upload an audio, video, or text file in the Analyze tab to see your detailed report here.</p>
       </div>
     );
   }
 
+  // Compute insights for selected analysis
+  const sel = selectedAnalysis;
+  const wellbeing = sel ? getWellbeingIndicator(sel.emotion_label, sel.confidence_score) : null;
+  const mentalSummary = sel ? getMentalStateSummary(sel.emotion_label, sel.confidence_score, sel.modalities_used) : '';
+  const valence = sel ? getEmotionalValence(sel.emotion_label) : 'neutral';
+  const valenceInfo = getValenceInfo(valence);
+  const arousal = sel ? getArousalLevel(sel.emotion_label) : 'low';
+  const arousalInfo = getArousalInfo(arousal);
+  const confidenceLabel = sel ? getConfidenceLabel(sel.confidence_score) : 'Low';
+  const dominantSecondary = sel?.all_probabilities ? getDominantAndSecondary(sel.all_probabilities) : null;
+  const copingStrategies = sel ? getCopingStrategies(sel.emotion_label) : [];
+  const contextualTip = sel ? getContextualTips(sel.emotion_label) : '';
+  const helplines = getHelplineInfo();
+  const modalityAgreement = sel ? getModalityAgreement(
+    sel.audio_result?.emotion_label,
+    sel.text_result?.emotion_label,
+    sel.video_result?.emotion_label,
+  ) : null;
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-amber-100 mb-2">Results</h2>
+          <h2 className="text-3xl font-bold text-amber-100 mb-2">Analysis Report</h2>
           <p className="text-amber-200/70">
-            Your emotion analysis history ({analyses.length} total)
+            Detailed emotion insights &amp; mental health recommendations ({analyses.length} total)
           </p>
         </div>
         <div className="flex space-x-2">
-          <button
-            onClick={loadAnalyses}
-            className="p-2 text-amber-200 hover:text-amber-100 hover:bg-amber-900/30 rounded-lg transition-colors"
-            title="Refresh"
-          >
+          <button onClick={loadAnalyses} className="p-2 text-amber-200 hover:text-amber-100 hover:bg-amber-900/30 rounded-lg transition-colors" title="Refresh">
             <RefreshCw className="w-5 h-5" />
           </button>
-          <button
-            onClick={handleClearAll}
-            className="px-3 py-2 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors text-sm"
-          >
+          <button onClick={handleClearAll} className="px-3 py-2 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors text-sm">
             Clear All
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left sidebar - Analysis list */}
-        <div className="lg:col-span-1 bg-stone-800/50 border border-amber-900/30 rounded-xl p-4 max-h-[600px] overflow-y-auto">
+        {/* ═══ LEFT SIDEBAR — Analysis list ═══ */}
+        <div className="lg:col-span-1 bg-stone-800/50 border border-amber-900/30 rounded-xl p-4 max-h-[700px] overflow-y-auto">
           <h3 className="font-semibold text-amber-100 mb-3">Recent Analyses</h3>
           <div className="space-y-2">
             {analyses.map((analysis) => (
@@ -146,28 +253,24 @@ export function Results() {
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl">{getEmotionEmoji(analysis.emotion_label)}</span>
-                  <div className="flex-1">
-                    <div className="font-medium text-amber-100 capitalize">
-                      {analysis.emotion_label}
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-amber-100 capitalize">{analysis.emotion_label}</div>
                     <div className="text-xs text-amber-200/60">
                       {new Date(analysis.timestamp).toLocaleString()}
                     </div>
                     {analysis.filename && (
-                      <div className="text-xs text-amber-400 truncate">
-                        {analysis.filename}
-                      </div>
+                      <div className="text-xs text-amber-400 truncate">{analysis.filename}</div>
                     )}
                   </div>
-                  <div className="text-sm font-medium text-amber-400">
-                    {(analysis.confidence_score * 100).toFixed(0)}%
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="text-sm font-medium text-amber-400">
+                      {(analysis.confidence_score * 100).toFixed(0)}%
+                    </div>
+                    <span className="text-xs">{getWellbeingIndicator(analysis.emotion_label, analysis.confidence_score).emoji}</span>
                   </div>
                 </div>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(analysis.id);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(analysis.id); }}
                   className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -177,106 +280,365 @@ export function Results() {
           </div>
         </div>
 
-        {/* Right side - Selected analysis details */}
-        <div className="lg:col-span-2 space-y-6">
-          {selectedAnalysis && (
+        {/* ═══ RIGHT SIDE — Full Report ═══ */}
+        <div className="lg:col-span-2 space-y-5">
+          {sel && (
             <>
-              {/* Main result card */}
-              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-6">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="text-5xl">{getEmotionEmoji(selectedAnalysis.emotion_label)}</div>
-                    <div>
-                      <div className={`inline-block px-4 py-2 rounded-lg border-2 ${getEmotionColor(selectedAnalysis.emotion_label)}`}>
-                        <span className="text-3xl font-bold capitalize">
-                          {selectedAnalysis.emotion_label}
+              {/* ─── 1. EMOTION HEADER ─── */}
+              <div className={`bg-gradient-to-r ${getEmotionGradient(sel.emotion_label)} rounded-xl p-6 text-white shadow-lg`}>
+                <div className="flex items-center space-x-4">
+                  <div className="text-6xl">{getEmotionEmoji(sel.emotion_label)}</div>
+                  <div className="flex-1">
+                    <h3 className="text-3xl font-bold capitalize">{sel.emotion_label}</h3>
+                    <p className="text-white/80 text-sm mt-1">Detected Emotion</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-medium capitalize">{sel.input_type}</span>
+                      {sel.detected_accent && (
+                        <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-medium">
+                          {getAccentInfo(sel.detected_accent).flag} {getAccentInfo(sel.detected_accent).label}
                         </span>
-                      </div>
-                      {selectedAnalysis.filename && (
-                        <div className="text-sm text-amber-200/60 mt-2">
-                          File: {selectedAnalysis.filename}
-                        </div>
                       )}
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleExport('json')}
-                      className="p-2 text-amber-200 hover:text-amber-100 hover:bg-amber-900/30 rounded-lg transition-colors"
-                      title="Export as JSON"
-                    >
-                      <Download className="w-5 h-5" />
-                    </button>
-                  </div>
+                  {/* Well-being badge */}
+                  {wellbeing && (
+                    <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-center">
+                      <div className="text-2xl mb-1">{wellbeing.emoji}</div>
+                      <div className="text-sm font-semibold">{wellbeing.label}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ─── Quality Warning ─── */}
+              {sel.quality_warning && (
+                <div className="flex items-start space-x-3 bg-amber-900/30 border border-amber-600/40 rounded-xl p-4">
+                  <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-200">{sel.quality_warning}</p>
+                </div>
+              )}
+
+              {/* ─── 2. MENTAL STATE SUMMARY ─── */}
+              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-6">
+                <h4 className="font-semibold text-amber-100 mb-3 flex items-center space-x-2">
+                  <Brain className="w-5 h-5 text-teal-400" />
+                  <span>Mental State Summary</span>
+                </h4>
+                <p className="text-amber-200/80 text-sm leading-relaxed">{mentalSummary}</p>
+
+                {/* Contextual Tip */}
+                <div className="mt-4 bg-teal-900/20 border border-teal-700/30 rounded-lg p-3">
+                  <p className="text-sm text-teal-300">{contextualTip}</p>
+                </div>
+              </div>
+
+              {/* ─── 3. CONFIDENCE GAUGE + VALENCE/AROUSAL ─── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Confidence Gauge */}
+                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
+                  <h4 className="font-semibold text-amber-100 mb-2 text-center flex items-center justify-center space-x-2">
+                    <Activity className="w-4 h-4 text-teal-400" />
+                    <span>Confidence Score</span>
+                  </h4>
+                  <EmotionGauge value={sel.confidence_score} label={confidenceLabel} />
                 </div>
 
-                {/* Confidence Score */}
-                <div className="bg-stone-700/50 rounded-xl p-4 mb-6">
-                  <div className="text-sm text-amber-200/70 mb-2">Confidence Score</div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-3xl font-bold text-amber-100">
-                      {(selectedAnalysis.confidence_score * 100).toFixed(1)}%
+                {/* Valence + Arousal */}
+                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5 space-y-4">
+                  <h4 className="font-semibold text-amber-100 flex items-center space-x-2">
+                    <Heart className="w-4 h-4 text-teal-400" />
+                    <span>Emotional Profile</span>
+                  </h4>
+
+                  {/* Valence Badge */}
+                  <div className={`flex items-center space-x-3 rounded-lg p-3 border ${valenceInfo.bg}`}>
+                    <span className="text-2xl">{valenceInfo.emoji}</span>
+                    <div>
+                      <div className={`font-semibold text-sm ${valenceInfo.color}`}>
+                        {valenceInfo.label} Valence
+                      </div>
+                      <p className="text-xs text-amber-200/60">
+                        Emotional polarity of the detected state
+                      </p>
                     </div>
-                    <div className="flex-1">
-                      <div className="w-full bg-stone-600 rounded-full h-3">
-                        <div
-                          className="bg-teal-600 h-3 rounded-full transition-all"
-                          style={{ width: `${selectedAnalysis.confidence_score * 100}%` }}
-                        />
+                  </div>
+
+                  {/* Arousal Badge */}
+                  <div className={`flex items-center space-x-3 rounded-lg p-3 border ${arousalInfo.bg}`}>
+                    <span className="text-2xl">{arousalInfo.emoji}</span>
+                    <div>
+                      <div className={`font-semibold text-sm ${arousalInfo.color}`}>
+                        {arousalInfo.label}
+                      </div>
+                      <p className="text-xs text-amber-200/60">
+                        {arousalInfo.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Well-being full description */}
+                  {wellbeing && (
+                    <div className="bg-stone-700/30 rounded-lg p-3 border border-stone-600/30">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span>{wellbeing.emoji}</span>
+                        <span className={`font-semibold text-sm ${wellbeing.color}`}>{wellbeing.label}</span>
+                      </div>
+                      <p className="text-xs text-amber-200/60">{wellbeing.description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ─── 4. DOMINANT vs SECONDARY EMOTION ─── */}
+              {dominantSecondary && (
+                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
+                  <h4 className="font-semibold text-amber-100 mb-3">Dominant vs. Secondary Emotion</h4>
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="bg-teal-900/20 border border-teal-700/30 rounded-lg p-3 text-center">
+                      <div className="text-3xl mb-1">{getEmotionEmoji(dominantSecondary.dominant.emotion)}</div>
+                      <div className="text-sm font-semibold text-teal-300 capitalize">{dominantSecondary.dominant.emotion}</div>
+                      <div className="text-xs text-amber-200/60">{(dominantSecondary.dominant.probability * 100).toFixed(1)}%</div>
+                    </div>
+                    <div className="bg-stone-700/30 border border-stone-600/30 rounded-lg p-3 text-center">
+                      <div className="text-3xl mb-1">{getEmotionEmoji(dominantSecondary.secondary.emotion)}</div>
+                      <div className="text-sm font-semibold text-amber-200/80 capitalize">{dominantSecondary.secondary.emotion}</div>
+                      <div className="text-xs text-amber-200/60">{(dominantSecondary.secondary.probability * 100).toFixed(1)}%</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-amber-200/60 italic">{dominantSecondary.interpretation}</p>
+                </div>
+              )}
+
+              {/* ─── 5. RADAR CHART ─── */}
+              {sel.all_probabilities && Object.keys(sel.all_probabilities).length > 2 && (
+                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
+                  <h4 className="font-semibold text-amber-100 mb-3 text-center">Emotion Distribution</h4>
+                  <RadarChart data={sel.all_probabilities} size={280} />
+                  {/* Probability list below radar */}
+                  <div className="mt-4 space-y-1.5">
+                    {Object.entries(sel.all_probabilities)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([emotion, probability]) => (
+                        <div key={emotion} className="flex items-center space-x-3">
+                          <span className="text-lg w-7">{getEmotionEmoji(emotion)}</span>
+                          <span className="w-20 text-amber-200 capitalize text-sm font-medium">{emotion}</span>
+                          <div className="flex-1 bg-stone-700 rounded-full h-2">
+                            <div
+                              className={`bg-gradient-to-r ${getEmotionGradient(emotion)} h-2 rounded-full`}
+                              style={{ width: `${probability * 100}%` }}
+                            />
+                          </div>
+                          <span className="w-14 text-right text-sm font-medium text-amber-200/70">
+                            {(probability * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ─── 6. MODALITY BREAKDOWN ─── */}
+              {sel.modalities_used && sel.modalities_used.length > 1 && (
+                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
+                  <h4 className="font-semibold text-amber-100 mb-1 flex items-center space-x-2">
+                    <Globe className="w-4 h-4 text-teal-400" />
+                    <span>Modality Breakdown</span>
+                  </h4>
+                  {modalityAgreement && (
+                    <p className="text-xs text-amber-200/60 mb-4">
+                      {modalityAgreement.emoji} {modalityAgreement.description}
+                      {sel.fusion_method && ` • Fusion: ${sel.fusion_method.replace('_', ' ')}`}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {sel.audio_result && (
+                      <div className="bg-teal-900/20 border border-teal-700/30 rounded-xl p-4">
+                        <div className="text-lg mb-1">🎤</div>
+                        <div className="text-sm font-semibold text-teal-300">Audio</div>
+                        <div className="text-xl font-bold text-amber-100 capitalize mt-1">{sel.audio_result.emotion_label}</div>
+                        <div className="text-xs text-amber-200/60 mt-1">
+                          Confidence: {(sel.audio_result.confidence_score * 100).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-amber-200/40">
+                          Weight: {(sel.audio_result.weight * 100).toFixed(0)}%
+                        </div>
+                        {sel.audio_result.detected_accent && (
+                          <div className="mt-2 text-xs text-indigo-300">
+                            {getAccentInfo(sel.audio_result.detected_accent).flag} {getAccentInfo(sel.audio_result.detected_accent).label}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {sel.text_result && (
+                      <div className="bg-purple-900/20 border border-purple-700/30 rounded-xl p-4">
+                        <div className="text-lg mb-1">📝</div>
+                        <div className="text-sm font-semibold text-purple-300">Text</div>
+                        <div className="text-xl font-bold text-amber-100 capitalize mt-1">{sel.text_result.emotion_label}</div>
+                        <div className="text-xs text-amber-200/60 mt-1">
+                          Confidence: {(sel.text_result.confidence_score * 100).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-amber-200/40">
+                          Weight: {(sel.text_result.weight * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                    )}
+                    {sel.video_result && (
+                      <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
+                        <div className="text-lg mb-1">📹</div>
+                        <div className="text-sm font-semibold text-blue-300">Video</div>
+                        <div className="text-xl font-bold text-amber-100 capitalize mt-1">{sel.video_result.emotion_label}</div>
+                        <div className="text-xs text-amber-200/60 mt-1">
+                          Confidence: {(sel.video_result.confidence_score * 100).toFixed(0)}%
+                        </div>
+                        <div className="text-xs text-amber-200/40">
+                          Weight: {(sel.video_result.weight * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ─── 7. MENTAL HEALTH CONTEXT & COPING STRATEGIES ─── */}
+              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
+                <h4 className="font-semibold text-amber-100 mb-4 flex items-center space-x-2">
+                  <Heart className="w-5 h-5 text-pink-400" />
+                  <span>Mental Health Context &amp; Recommendations</span>
+                </h4>
+
+                {/* Coping Strategies */}
+                <div className="space-y-3 mb-5">
+                  {copingStrategies.map((strategy, i) => (
+                    <div key={i} className="flex items-start space-x-3 bg-stone-700/30 rounded-lg p-3 border border-stone-600/20">
+                      <span className="text-2xl flex-shrink-0">{strategy.icon}</span>
+                      <div>
+                        <div className="text-sm font-semibold text-amber-100">{strategy.title}</div>
+                        <p className="text-xs text-amber-200/60 mt-0.5 leading-relaxed">{strategy.description}</p>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
 
-                {/* All Probabilities */}
-                {selectedAnalysis.all_probabilities && Object.keys(selectedAnalysis.all_probabilities).length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-amber-100 mb-3">All Emotion Probabilities</h4>
-                    <div className="space-y-3">
-                      {Object.entries(selectedAnalysis.all_probabilities)
-                        .sort(([, a], [, b]) => b - a)
-                        .map(([emotion, probability]) => (
-                          <div key={emotion} className="flex items-center space-x-3">
-                            <span className="text-xl w-8">{getEmotionEmoji(emotion)}</span>
-                            <span className="w-20 text-amber-200 capitalize font-medium">{emotion}</span>
-                            <div className="flex-1 bg-stone-700 rounded-full h-2">
-                              <div
-                                className="bg-teal-500 h-2 rounded-full"
-                                style={{ width: `${probability * 100}%` }}
-                              />
+                {/* Helpline Toggle */}
+                {(wellbeing?.level === 'elevated_concern' || wellbeing?.level === 'mild_concern') && (
+                  <div className="border-t border-amber-900/20 pt-4">
+                    <button
+                      onClick={() => setShowHelplines(!showHelplines)}
+                      className="flex items-center space-x-2 text-sm text-amber-200/70 hover:text-amber-100 transition-colors w-full"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>Need to Talk? Mental Health Helplines</span>
+                      {showHelplines ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+                    </button>
+                    {showHelplines && (
+                      <div className="mt-3 space-y-2">
+                        {helplines.map((line, i) => (
+                          <div key={i} className="flex items-center justify-between bg-stone-700/30 rounded-lg p-3 border border-stone-600/20">
+                            <div>
+                              <div className="text-sm font-medium text-amber-100">{line.name}</div>
+                              <div className="text-xs text-amber-200/50">{line.region} • {line.available}</div>
                             </div>
-                            <span className="w-16 text-right text-sm font-medium text-amber-200/70">
-                              {(probability * 100).toFixed(1)}%
-                            </span>
+                            <div className="text-sm font-mono text-teal-400">{line.number}</div>
                           </div>
                         ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Metadata card */}
-              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-6">
+              {/* ─── 8. DISCLAIMER ─── */}
+              <div className="flex items-start space-x-3 bg-stone-800/30 border border-stone-700/30 rounded-xl p-4">
+                <Shield className="w-5 h-5 text-amber-200/40 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-200/40 leading-relaxed">{DISCLAIMER_TEXT}</p>
+              </div>
+
+              {/* ─── 9. METADATA (Collapsible) ─── */}
+              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setShowMetadata(!showMetadata)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-stone-700/20 transition-colors"
+                >
+                  <h4 className="font-semibold text-amber-100 flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-amber-400" />
+                    <span>Analysis Details &amp; Metadata</span>
+                  </h4>
+                  {showMetadata ? <ChevronUp className="w-4 h-4 text-amber-200/60" /> : <ChevronDown className="w-4 h-4 text-amber-200/60" />}
+                </button>
+                {showMetadata && (
+                  <div className="px-4 pb-4 space-y-2 text-sm border-t border-amber-900/20 pt-3">
+                    <div className="flex justify-between">
+                      <span className="text-amber-200/70">Analysis ID:</span>
+                      <span className="font-mono text-amber-100 text-xs">{sel.id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-200/70">Timestamp:</span>
+                      <span className="text-amber-100">{new Date(sel.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-200/70">Input Type:</span>
+                      <span className="text-amber-100 capitalize">{sel.input_type}</span>
+                    </div>
+                    {sel.filename && (
+                      <div className="flex justify-between">
+                        <span className="text-amber-200/70">Filename:</span>
+                        <span className="text-amber-100 truncate ml-4">{sel.filename}</span>
+                      </div>
+                    )}
+                    {sel.detected_accent && (
+                      <div className="flex justify-between">
+                        <span className="text-amber-200/70">Detected Accent:</span>
+                        <span className="text-amber-100">
+                          {getAccentInfo(sel.detected_accent).flag} {getAccentInfo(sel.detected_accent).label}
+                        </span>
+                      </div>
+                    )}
+                    {sel.fusion_method && (
+                      <div className="flex justify-between">
+                        <span className="text-amber-200/70">Fusion Method:</span>
+                        <span className="text-amber-100 capitalize">{sel.fusion_method.replace('_', ' ')}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ─── 10. EXPORT & RAW JSON ─── */}
+              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
                 <h4 className="font-semibold text-amber-100 mb-3 flex items-center space-x-2">
-                  <Calendar className="w-5 h-5" />
-                  <span>Analysis Details</span>
+                  <Download className="w-4 h-4 text-amber-400" />
+                  <span>Export Report</span>
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-amber-200/70">Analysis ID:</span>
-                    <span className="font-mono text-amber-100">{selectedAnalysis.id.slice(0, 8)}...</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-amber-200/70">Timestamp:</span>
-                    <span className="text-amber-100">
-                      {new Date(selectedAnalysis.timestamp).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-amber-200/70">Input Type:</span>
-                    <span className="text-amber-100 capitalize">{selectedAnalysis.input_type}</span>
-                  </div>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <button
+                    onClick={handleExportReport}
+                    className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors shadow-lg shadow-teal-800/30 text-sm font-medium"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Full Report (.txt)</span>
+                  </button>
+                  <button
+                    onClick={handleExportJSON}
+                    className="flex items-center space-x-2 px-4 py-2.5 bg-stone-700 text-amber-200 rounded-lg hover:bg-stone-600 transition-colors text-sm font-medium border border-stone-600"
+                  >
+                    <FileJson className="w-4 h-4" />
+                    <span>Export JSON</span>
+                  </button>
                 </div>
+
+                {/* Raw JSON Toggle */}
+                <button
+                  onClick={() => setShowRawJson(!showRawJson)}
+                  className="flex items-center space-x-2 text-xs text-amber-200/50 hover:text-amber-200/80 transition-colors"
+                >
+                  <span>View Raw JSON Data</span>
+                  {showRawJson ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+                {showRawJson && (
+                  <pre className="mt-2 bg-stone-900/80 border border-stone-700 rounded-lg p-3 text-xs text-amber-200/60 overflow-x-auto max-h-60">
+                    {JSON.stringify(sel, null, 2)}
+                  </pre>
+                )}
               </div>
             </>
           )}

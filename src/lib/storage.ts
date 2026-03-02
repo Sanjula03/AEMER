@@ -3,14 +3,28 @@
  * Since Supabase is unavailable, we store results locally in the browser
  */
 
+export interface ModalityResult {
+    emotion_label: string;
+    confidence_score: number;
+    weight: number;
+    detected_accent?: string | null;
+}
+
 export interface AnalysisResult {
     id: string;
     timestamp: string;
-    input_type: 'audio' | 'video' | 'text';
+    input_type: 'audio' | 'video' | 'text' | 'multimodal';
     filename?: string;
     emotion_label: string;
     confidence_score: number;
     all_probabilities?: Record<string, number>;
+    detected_accent?: string | null;
+    quality_warning?: string;
+    fusion_method?: string;
+    modalities_used?: string[];
+    audio_result?: ModalityResult;
+    text_result?: ModalityResult;
+    video_result?: ModalityResult;
 }
 
 const STORAGE_KEY = 'aemer_analysis_results';

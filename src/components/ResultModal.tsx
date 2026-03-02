@@ -1,5 +1,10 @@
 import { createPortal } from 'react-dom';
-import { X, AlertTriangle, Globe } from 'lucide-react';
+import { X, AlertTriangle, Globe, Shield } from 'lucide-react';
+import {
+    getMentalStateSummary,
+    getWellbeingIndicator,
+    DISCLAIMER_TEXT,
+} from '../lib/emotionInsights';
 
 interface ModalityResult {
     emotion_label: string;
@@ -110,6 +115,11 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                     <div className="text-5xl mb-2">{getEmotionEmoji(result.emotion_label)}</div>
                     <h2 className="text-2xl font-bold capitalize">{result.emotion_label}</h2>
                     <p className="text-white/80 text-sm mt-1">Detected Emotion</p>
+                    {/* Well-being Badge */}
+                    <div className="mt-2 inline-flex items-center space-x-1.5 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1">
+                        <span className="text-sm">{getWellbeingIndicator(result.emotion_label, result.confidence_score).emoji}</span>
+                        <span className="text-sm font-medium">{getWellbeingIndicator(result.emotion_label, result.confidence_score).label}</span>
+                    </div>
                 </div>
 
                 {/* Scrollable content area */}
@@ -117,6 +127,13 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                     className="p-5 space-y-4"
                     style={{ overflowY: 'auto', flex: '1 1 auto', minHeight: 0 }}
                 >
+                    {/* Mental State Summary */}
+                    <div className="bg-stone-50 rounded-lg p-3 text-center">
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                            {getMentalStateSummary(result.emotion_label, result.confidence_score, result.modalities_used)}
+                        </p>
+                    </div>
+
                     {/* Quality Warning */}
                     {result.quality_warning && (
                         <div className="flex items-start space-x-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -217,6 +234,14 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* Disclaimer */}
+                <div className="px-5 pb-2">
+                    <div className="flex items-start space-x-2 bg-gray-50 rounded-lg p-2.5">
+                        <Shield className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-[10px] text-gray-400 leading-relaxed">{DISCLAIMER_TEXT}</p>
+                    </div>
                 </div>
 
                 {/* Button — fixed at bottom */}
