@@ -128,9 +128,10 @@ export function RadarChart({ data, size = 280 }: RadarChartProps) {
                         y={a.labelY}
                         textAnchor="middle"
                         dominantBaseline="central"
-                        className="fill-amber-200/80"
+                        fill="rgba(253, 230, 138, 0.8)"
                         fontSize="11"
                         fontWeight="500"
+                        fontFamily="system-ui, sans-serif"
                     >
                         {EMOTION_EMOJIS[a.label.toLowerCase()] || '🎭'}{' '}
                         {a.label.charAt(0).toUpperCase() + a.label.slice(1)}
@@ -143,9 +144,10 @@ export function RadarChart({ data, size = 280 }: RadarChartProps) {
                         key={`ring-label-${ring}`}
                         x={cx + 4}
                         y={cy - radius * ring + 2}
-                        className="fill-amber-200/40"
+                        fill="rgba(253, 230, 138, 0.4)"
                         fontSize="8"
                         textAnchor="start"
+                        fontFamily="system-ui, sans-serif"
                     >
                         {Math.round(ring * 100)}%
                     </text>

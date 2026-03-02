@@ -54,7 +54,7 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
 
     return (
         <div className="flex flex-col items-center">
-            <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`}>
+            <svg width={size} height={size * 0.7} viewBox={`0 0 ${size} ${size * 0.7}`}>
                 {/* Gradient definition */}
                 <defs>
                     <linearGradient id={`gauge-gradient-${percentage}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -89,14 +89,14 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
                     />
                 )}
 
-                {/* Percentage text */}
                 <text
                     x={cx}
                     y={cy - 8}
                     textAnchor="middle"
-                    className="fill-amber-100"
+                    fill="#fef3c7"
                     fontSize={size * 0.16}
                     fontWeight="bold"
+                    fontFamily="system-ui, sans-serif"
                 >
                     {percentage}%
                 </text>
@@ -105,10 +105,11 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
                 {label && (
                     <text
                         x={cx}
-                        y={cy + size * 0.08}
+                        y={cy + size * 0.1}
                         textAnchor="middle"
-                        className="fill-amber-200/60"
-                        fontSize={size * 0.06}
+                        fill="rgba(253, 230, 138, 0.6)"
+                        fontSize={size * 0.065}
+                        fontFamily="system-ui, sans-serif"
                     >
                         {label}
                     </text>
