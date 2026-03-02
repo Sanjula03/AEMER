@@ -169,13 +169,13 @@ export function Results() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in-up">
         <div>
-          <h2 className="text-3xl font-bold text-white mb-1 flex items-center space-x-3">
-            <Sparkles className="w-7 h-7 text-cyan-400" />
+          <h2 className="text-xl sm:text-3xl font-bold text-white mb-1 flex items-center space-x-2 sm:space-x-3">
+            <Sparkles className="w-5 h-5 sm:w-7 sm:h-7 text-cyan-400" />
             <span>Analysis Report</span>
           </h2>
-          <p style={{ color: '#525252', fontSize: '14px' }}>
+          <p className="text-xs sm:text-sm" style={{ color: '#525252' }}>
             <TypingText text={`Detailed emotion insights & mental health recommendations (${analyses.length} total)`} />
           </p>
         </div>

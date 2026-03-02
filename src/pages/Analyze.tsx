@@ -276,8 +276,8 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
     <>
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="animate-fade-in-up">
-          <h2 className="text-3xl font-bold text-white mb-2">Analyze Emotion</h2>
-          <p style={{ color: '#737373' }}>
+          <h2 className="text-xl sm:text-3xl font-bold text-white mb-2">Analyze Emotion</h2>
+          <p className="text-xs sm:text-base" style={{ color: '#737373' }}>
             Submit audio, video, or text for multimodal emotion recognition
           </p>
         </div>
@@ -299,7 +299,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                 </div>
                 {s < 3 && (
                   <div
-                    className="h-0.5 w-20 mx-2 rounded-full transition-all"
+                    className="h-0.5 w-8 sm:w-20 mx-1 sm:mx-2 rounded-full transition-all"
                     style={{ background: step > s ? '#06b6d4' : '#1f1f1f' }}
                   />
                 )}

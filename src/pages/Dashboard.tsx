@@ -156,13 +156,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="absolute top-0 right-0 w-72 h-72 rounded-full blur-3xl" style={{ background: 'rgba(6,182,212,0.08)' }} />
         <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl" style={{ background: 'rgba(6,182,212,0.05)' }} />
 
-        <div className="relative flex items-center justify-between">
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-4xl font-bold text-white mb-3 flex items-center gap-3">
-              <Sparkles className="w-9 h-9" style={{ color: '#22d3ee' }} />
+            <h2 className="text-2xl sm:text-4xl font-bold text-white mb-2 sm:mb-3 flex items-center gap-2 sm:gap-3">
+              <Sparkles className="w-6 h-6 sm:w-9 sm:h-9" style={{ color: '#22d3ee' }} />
               Welcome to AEMER
             </h2>
-            <p className="text-lg" style={{ color: '#a3a3a3' }}>
+            <p className="text-sm sm:text-lg" style={{ color: '#a3a3a3' }}>
               <TypingText text="AI-Powered Emotion Recognition at Your Fingertips" />
             </p>
           </div>
