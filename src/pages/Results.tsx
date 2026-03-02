@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Download, Calendar, Trash2, RefreshCw, Globe, ChevronDown, ChevronUp,
-  AlertTriangle, Shield, Phone, Heart, Brain, Activity
+  AlertTriangle, Shield, Phone, Heart, Brain, Activity, Sparkles
 } from 'lucide-react';
 import { getStoredResults, deleteResult, clearResults, type AnalysisResult } from '../lib/storage';
 import { RadarChart } from '../components/RadarChart';
@@ -23,12 +23,55 @@ import {
 } from '../lib/emotionInsights';
 import { generateSingleReportHTML, downloadHTML } from '../lib/reportGenerator';
 
+/* ── Animated Counter Hook ── */
+function useAnimatedCounter(target: number, duration = 1000) {
+  const [value, setValue] = useState(0);
+  const ref = useRef<number>(0);
+  useEffect(() => {
+    const start = ref.current;
+    const diff = target - start;
+    if (diff === 0) return;
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const t = Math.min((now - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const current = start + diff * ease;
+      setValue(current);
+      ref.current = current;
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+  return Math.round(value);
+}
+
+/* ── Typing Text Component ── */
+function TypingText({ text, speed = 20 }: { text: string; speed?: number }) {
+  const [displayed, setDisplayed] = useState('');
+  useEffect(() => {
+    setDisplayed('');
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i < text.length) { setDisplayed(text.slice(0, i + 1)); i++; }
+      else clearInterval(timer);
+    }, speed);
+    return () => clearInterval(timer);
+  }, [text, speed]);
+  return (
+    <span>
+      {displayed}
+      <span className="inline-block w-0.5 h-3.5 ml-0.5 bg-cyan-400 align-middle" style={{ animation: 'typing-cursor 0.8s step-end infinite' }} />
+    </span>
+  );
+}
+
 export function Results() {
   const [analyses, setAnalyses] = useState<AnalysisResult[]>([]);
   const [selectedAnalysis, setSelectedAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMetadata, setShowMetadata] = useState(false);
   const [showHelplines, setShowHelplines] = useState(false);
+  const [barsVisible, setBarsVisible] = useState(false);
 
   useEffect(() => {
     loadAnalyses();
@@ -42,6 +85,7 @@ export function Results() {
       setSelectedAnalysis(results[0]);
     }
     setLoading(false);
+    setTimeout(() => setBarsVisible(true), 300);
   };
 
   const handleDelete = (id: string) => {
@@ -102,9 +146,12 @@ export function Results() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#06b6d4', borderTopColor: 'transparent' }} />
-          <span style={{ color: '#737373' }}>Loading results...</span>
+        <div className="flex flex-col items-center space-y-3">
+          <div className="relative">
+            <div className="w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(6,182,212,0.15)', borderTopColor: '#06b6d4' }} />
+            <div className="absolute inset-0 w-12 h-12 border-2 rounded-full animate-spin" style={{ borderColor: 'transparent', borderBottomColor: 'rgba(6,182,212,0.3)', animationDirection: 'reverse', animationDuration: '1.5s' }} />
+          </div>
+          <span style={{ color: '#525252', fontSize: '13px' }}>Loading results...</span>
         </div>
       </div>
     );
@@ -112,10 +159,10 @@ export function Results() {
 
   if (analyses.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-16 animate-fade-in-up" style={{ background: '#0a0a0a', borderRadius: '16px', border: '1px solid rgba(6,182,212,0.08)' }}>
         <div className="text-6xl mb-4">📊</div>
         <h3 className="text-xl font-semibold text-white mb-2">No Results Yet</h3>
-        <p className="text-neutral-500">Upload an audio, video, or text file in the Analyze tab to see your detailed report here.</p>
+        <p style={{ color: '#525252', fontSize: '14px' }}>Upload an audio, video, or text file in the Analyze tab to see your detailed report here.</p>
       </div>
     );
   }
@@ -144,14 +191,24 @@ export function Results() {
       {/* Header */}
       <div className="flex items-center justify-between animate-fade-in-up">
         <div>
-          <h2 className="text-3xl font-bold text-white mb-2">Analysis Report</h2>
-          <p className="text-neutral-400">
-            Detailed emotion insights &amp; mental health recommendations ({analyses.length} total)
+          <h2 className="text-3xl font-bold text-white mb-1 flex items-center space-x-3">
+            <Sparkles className="w-7 h-7 text-cyan-400" />
+            <span>Analysis Report</span>
+          </h2>
+          <p style={{ color: '#525252', fontSize: '14px' }}>
+            <TypingText text={`Detailed emotion insights & mental health recommendations (${analyses.length} total)`} />
           </p>
         </div>
         <div className="flex space-x-2">
-          <button onClick={loadAnalyses} className="p-2 text-neutral-300 hover:text-white hover:bg-cyan-900/20 rounded-lg transition-colors" title="Refresh">
-            <RefreshCw className="w-5 h-5" />
+          <button
+            onClick={loadAnalyses}
+            className="p-2.5 rounded-xl transition-all group"
+            style={{ border: '1px solid rgba(6,182,212,0.1)', background: 'rgba(6,182,212,0.03)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(6,182,212,0.08)'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.25)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(6,182,212,0.03)'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.1)'; }}
+            title="Refresh"
+          >
+            <RefreshCw className="w-4 h-4 text-neutral-400 group-hover:text-cyan-400 transition-colors" />
           </button>
           <button onClick={handleClearAll} className="px-3 py-2 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors text-sm">
             Clear All
@@ -161,17 +218,20 @@ export function Results() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ═══ LEFT SIDEBAR — Analysis list ═══ */}
-        <div className="lg:col-span-1 bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-4 max-h-[700px] overflow-y-auto animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
+        <div className="lg:col-span-1 rounded-2xl p-4 max-h-[700px] overflow-y-auto animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '100ms', animationFillMode: 'backwards' }}>
           <h3 className="font-semibold text-white mb-3">Recent Analyses</h3>
           <div className="space-y-2">
             {analyses.map((analysis) => (
               <div
                 key={analysis.id}
-                className={`relative group p-3 rounded-lg transition-colors cursor-pointer ${selectedAnalysis?.id === analysis.id
-                  ? 'bg-cyan-900/30 border border-cyan-500/40'
-                  : 'bg-neutral-800/50 hover:bg-neutral-800 border border-transparent'
-                  }`}
+                className={`relative group p-3 rounded-xl transition-all cursor-pointer`}
+                style={selectedAnalysis?.id === analysis.id
+                  ? { background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)', boxShadow: '0 0 15px rgba(6,182,212,0.08)' }
+                  : { background: 'transparent', border: '1px solid transparent' }
+                }
                 onClick={() => setSelectedAnalysis(analysis)}
+                onMouseEnter={e => { if (selectedAnalysis?.id !== analysis.id) { e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.1)'; } }}
+                onMouseLeave={e => { if (selectedAnalysis?.id !== analysis.id) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; } }}
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl">{getEmotionEmoji(analysis.emotion_label)}</span>
@@ -207,7 +267,9 @@ export function Results() {
           {sel && (
             <>
               {/* ─── 1. EMOTION HEADER ─── */}
-              <div className={`bg-gradient-to-r ${getEmotionGradient(sel.emotion_label)} rounded-xl p-6 text-white shadow-lg animate-fade-in-up`} style={{ animationDelay: '150ms', animationFillMode: 'backwards' }}>
+              <div className={`bg-gradient-to-r ${getEmotionGradient(sel.emotion_label)} rounded-2xl p-6 text-white shadow-lg animate-fade-in-up relative overflow-hidden`} style={{ animationDelay: '150ms', animationFillMode: 'backwards' }}>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 opacity-20" style={{ background: 'linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)', animation: 'shimmer 3s infinite' }} />
                 <div className="flex items-center space-x-4">
                   <div className="text-6xl">{getEmotionEmoji(sel.emotion_label)}</div>
                   <div className="flex-1">
@@ -241,7 +303,7 @@ export function Results() {
               )}
 
               {/* ─── 2. MENTAL STATE SUMMARY ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-6 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
+              <div className="rounded-2xl p-6 animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '200ms', animationFillMode: 'backwards' }}>
                 <h4 className="font-semibold text-white mb-3 flex items-center space-x-2">
                   <Brain className="w-5 h-5 text-cyan-400" />
                   <span>Mental State Summary</span>
@@ -257,7 +319,7 @@ export function Results() {
               {/* ─── 3. CONFIDENCE GAUGE + VALENCE/AROUSAL ─── */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'backwards' }}>
                 {/* Confidence Gauge */}
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                <div className="rounded-2xl p-5" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)' }}>
                   <h4 className="font-semibold text-white mb-2 text-center flex items-center justify-center space-x-2">
                     <Activity className="w-4 h-4 text-cyan-400" />
                     <span>Confidence Score</span>
@@ -266,7 +328,7 @@ export function Results() {
                 </div>
 
                 {/* Valence + Arousal */}
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 space-y-4">
+                <div className="rounded-2xl p-5 space-y-4" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)' }}>
                   <h4 className="font-semibold text-white flex items-center space-x-2">
                     <Heart className="w-4 h-4 text-cyan-400" />
                     <span>Emotional Profile</span>
@@ -313,15 +375,25 @@ export function Results() {
 
               {/* ─── 4. DOMINANT vs SECONDARY EMOTION ─── */}
               {dominantSecondary && (
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
+                <div className="rounded-2xl p-5 animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '300ms', animationFillMode: 'backwards' }}>
                   <h4 className="font-semibold text-white mb-3">Dominant vs. Secondary Emotion</h4>
                   <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="bg-cyan-900/20 border border-cyan-700/30 rounded-lg p-3 text-center">
+                    <div
+                      className="rounded-xl p-4 text-center transition-all"
+                      style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.1)' }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(6,182,212,0.12)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
                       <div className="text-3xl mb-1">{getEmotionEmoji(dominantSecondary.dominant.emotion)}</div>
                       <div className="text-sm font-semibold text-cyan-300 capitalize">{dominantSecondary.dominant.emotion}</div>
                       <div className="text-xs text-neutral-500">{(dominantSecondary.dominant.probability * 100).toFixed(1)}%</div>
                     </div>
-                    <div className="bg-neutral-800/30 border border-neutral-700/30 rounded-lg p-3 text-center">
+                    <div
+                      className="rounded-xl p-4 text-center transition-all"
+                      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255,255,255,0.04)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
                       <div className="text-3xl mb-1">{getEmotionEmoji(dominantSecondary.secondary.emotion)}</div>
                       <div className="text-sm font-semibold text-neutral-300 capitalize">{dominantSecondary.secondary.emotion}</div>
                       <div className="text-xs text-neutral-500">{(dominantSecondary.secondary.probability * 100).toFixed(1)}%</div>
@@ -333,7 +405,7 @@ export function Results() {
 
               {/* ─── 5. RADAR CHART ─── */}
               {sel.all_probabilities && Object.keys(sel.all_probabilities).length > 2 && (
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '350ms', animationFillMode: 'backwards' }}>
+                <div className="rounded-2xl p-5 animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '350ms', animationFillMode: 'backwards' }}>
                   <h4 className="font-semibold text-white mb-3 text-center">Emotion Distribution</h4>
                   <RadarChart data={sel.all_probabilities} size={280} />
                   {/* Probability list below radar */}
@@ -341,16 +413,19 @@ export function Results() {
                     {Object.entries(sel.all_probabilities)
                       .sort(([, a], [, b]) => b - a)
                       .map(([emotion, probability]) => (
-                        <div key={emotion} className="flex items-center space-x-3">
-                          <span className="text-lg w-7">{getEmotionEmoji(emotion)}</span>
+                        <div key={emotion} className="flex items-center space-x-3 group">
+                          <span className="text-lg w-7 group-hover:scale-125 transition-transform inline-block">{getEmotionEmoji(emotion)}</span>
                           <span className="w-20 text-neutral-300 capitalize text-sm font-medium">{emotion}</span>
-                          <div className="flex-1 bg-neutral-800 rounded-full h-2">
+                          <div className="flex-1 rounded-full h-2.5 overflow-hidden" style={{ background: '#171717' }}>
                             <div
-                              className={`bg-gradient-to-r ${getEmotionGradient(emotion)} h-2 rounded-full`}
-                              style={{ width: `${probability * 100}%` }}
+                              className={`bg-gradient-to-r ${getEmotionGradient(emotion)} h-2.5 rounded-full`}
+                              style={{
+                                width: barsVisible ? `${probability * 100}%` : '0%',
+                                transition: 'width 1s cubic-bezier(0.22, 1, 0.36, 1)',
+                              }}
                             />
                           </div>
-                          <span className="w-14 text-right text-sm font-medium text-neutral-400">
+                          <span className="w-14 text-right text-sm font-semibold" style={{ color: '#06b6d4' }}>
                             {(probability * 100).toFixed(1)}%
                           </span>
                         </div>
@@ -361,7 +436,7 @@ export function Results() {
 
               {/* ─── 6. MODALITY BREAKDOWN ─── */}
               {sel.modalities_used && sel.modalities_used.length > 1 && (
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '400ms', animationFillMode: 'backwards' }}>
+                <div className="rounded-2xl p-5 animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '400ms', animationFillMode: 'backwards' }}>
                   <h4 className="font-semibold text-white mb-1 flex items-center space-x-2">
                     <Globe className="w-4 h-4 text-cyan-400" />
                     <span>Modality Breakdown</span>
@@ -374,7 +449,12 @@ export function Results() {
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {sel.audio_result && (
-                      <div className="bg-cyan-900/20 border border-cyan-700/30 rounded-xl p-4">
+                      <div
+                        className="rounded-xl p-4 transition-all"
+                        style={{ background: 'rgba(6,182,212,0.04)', border: '1px solid rgba(6,182,212,0.1)' }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(6,182,212,0.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                      >
                         <div className="text-lg mb-1">🎤</div>
                         <div className="text-sm font-semibold text-cyan-300">Audio</div>
                         <div className="text-xl font-bold text-white capitalize mt-1">{sel.audio_result.emotion_label}</div>
@@ -392,7 +472,12 @@ export function Results() {
                       </div>
                     )}
                     {sel.text_result && (
-                      <div className="bg-violet-900/20 border border-violet-700/30 rounded-xl p-4">
+                      <div
+                        className="rounded-xl p-4 transition-all"
+                        style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.1)' }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(168,85,247,0.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                      >
                         <div className="text-lg mb-1">📝</div>
                         <div className="text-sm font-semibold text-purple-300">Text</div>
                         <div className="text-xl font-bold text-white capitalize mt-1">{sel.text_result.emotion_label}</div>
@@ -405,7 +490,12 @@ export function Results() {
                       </div>
                     )}
                     {sel.video_result && (
-                      <div className="bg-sky-900/20 border border-sky-700/30 rounded-xl p-4">
+                      <div
+                        className="rounded-xl p-4 transition-all"
+                        style={{ background: 'rgba(56,189,248,0.04)', border: '1px solid rgba(56,189,248,0.1)' }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(56,189,248,0.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                      >
                         <div className="text-lg mb-1">📹</div>
                         <div className="text-sm font-semibold text-blue-300">Video</div>
                         <div className="text-xl font-bold text-white capitalize mt-1">{sel.video_result.emotion_label}</div>
@@ -422,7 +512,7 @@ export function Results() {
               )}
 
               {/* ─── 7. MENTAL HEALTH CONTEXT & COPING STRATEGIES ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '450ms', animationFillMode: 'backwards' }}>
+              <div className="rounded-2xl p-5 animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '450ms', animationFillMode: 'backwards' }}>
                 <h4 className="font-semibold text-white mb-4 flex items-center space-x-2">
                   <Heart className="w-5 h-5 text-pink-400" />
                   <span>Mental Health Context &amp; Recommendations</span>
@@ -431,7 +521,13 @@ export function Results() {
                 {/* Coping Strategies */}
                 <div className="space-y-3 mb-5">
                   {copingStrategies.map((strategy, i) => (
-                    <div key={i} className="flex items-start space-x-3 bg-neutral-800/30 rounded-lg p-3 border border-neutral-700/20">
+                    <div
+                      key={i}
+                      className="flex items-start space-x-3 rounded-xl p-3 transition-all"
+                      style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.04)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(6,182,212,0.04)'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.1)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.015)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)'; e.currentTarget.style.transform = 'translateX(0)'; }}
+                    >
                       <span className="text-2xl flex-shrink-0">{strategy.icon}</span>
                       <div>
                         <div className="text-sm font-semibold text-white">{strategy.title}</div>
@@ -476,7 +572,7 @@ export function Results() {
               </div>
 
               {/* ─── 9. METADATA (Collapsible) ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl overflow-hidden animate-fade-in-up" style={{ animationDelay: '550ms', animationFillMode: 'backwards' }}>
+              <div className="rounded-2xl p-5 animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '550ms', animationFillMode: 'backwards' }}>
                 <button
                   onClick={() => setShowMetadata(!showMetadata)}
                   className="w-full flex items-center justify-between p-4 hover:bg-neutral-800/20 transition-colors"
@@ -526,14 +622,17 @@ export function Results() {
               </div>
 
               {/* ─── 10. DOWNLOAD REPORT ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '600ms', animationFillMode: 'backwards' }}>
-                <h4 className="font-semibold text-white mb-3 flex items-center space-x-2">
+              <div className="rounded-2xl p-5 animate-fade-in-up" style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.08)', animationDelay: '600ms', animationFillMode: 'backwards' }}>
+                <h4 className="font-semibold text-white mb-4 flex items-center space-x-2">
                   <Download className="w-4 h-4 text-cyan-400" />
                   <span>Export Report</span>
                 </h4>
                 <button
                   onClick={handleDownloadReport}
-                  className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 transition-colors shadow-lg shadow-cyan-800/30 text-sm font-medium"
+                  className="flex items-center space-x-2 px-6 py-3 text-white rounded-xl text-sm font-medium transition-all"
+                  style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', boxShadow: '0 4px 15px rgba(6,182,212,0.3)' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 30px rgba(6,182,212,0.4)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(6,182,212,0.3)'; }}
                 >
                   <Download className="w-4 h-4" />
                   <span>Download Full Report</span>
