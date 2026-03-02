@@ -167,14 +167,23 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </p>
           </div>
           <button
-            onClick={loadDashboardData}
-            className="p-3 rounded-xl transition-all hover:scale-105"
-            style={{
-              background: 'rgba(6,182,212,0.1)',
-              border: '1px solid rgba(6,182,212,0.2)',
+            onClick={(e) => {
+              const icon = e.currentTarget.querySelector('svg');
+              if (icon) { icon.style.animation = 'spin 0.6s ease'; setTimeout(() => { icon.style.animation = ''; }, 600); }
+              loadDashboardData();
             }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+            style={{
+              background: 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(6,182,212,0.06))',
+              border: '1px solid rgba(6,182,212,0.15)',
+              color: '#22d3ee',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.1))'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(6,182,212,0.15)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(6,182,212,0.06))'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.15)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            title="Refresh data"
           >
-            <RefreshCw className="w-5 h-5" style={{ color: '#22d3ee' }} />
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
           </button>
         </div>
       </div>

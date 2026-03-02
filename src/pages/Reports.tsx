@@ -169,14 +169,23 @@ export function Reports() {
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={loadReportData}
-            className="p-2.5 rounded-xl transition-all group"
-            style={{ border: '1px solid rgba(6,182,212,0.1)', background: 'rgba(6,182,212,0.03)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(6,182,212,0.08)'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.25)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(6,182,212,0.03)'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.1)'; }}
-            title="Refresh"
+            onClick={(e) => {
+              const icon = e.currentTarget.querySelector('svg');
+              if (icon) { icon.style.animation = 'spin 0.6s ease'; setTimeout(() => { icon.style.animation = ''; }, 600); }
+              loadReportData();
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+            style={{
+              background: 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(6,182,212,0.06))',
+              border: '1px solid rgba(6,182,212,0.15)',
+              color: '#22d3ee',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.1))'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(6,182,212,0.15)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(6,182,212,0.06))'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.15)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            title="Refresh data"
           >
-            <RefreshCw className="w-4 h-4 text-neutral-400 group-hover:text-cyan-400 transition-colors" />
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
           </button>
           <button
             onClick={handleExportReport}
