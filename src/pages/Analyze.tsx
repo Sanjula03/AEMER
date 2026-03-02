@@ -364,7 +364,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                       type="file"
                       accept="audio/*"
                       onChange={(e) => setMmAudioFile(e.target.files?.[0] || null)}
-                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-white file:cursor-pointer"
+                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-cyan-500/30 file:bg-cyan-950 file:text-cyan-300 file:cursor-pointer file:font-medium file:transition-all"
                       style={{ fontSize: '13px' }}
                     />
                     {mmAudioFile && <p className="mt-1 text-xs" style={{ color: '#10b981' }}>✅ {mmAudioFile.name}</p>}
@@ -390,7 +390,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                       type="file"
                       accept="video/*,image/*"
                       onChange={(e) => setMmVideoFile(e.target.files?.[0] || null)}
-                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-white file:cursor-pointer"
+                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-blue-500/30 file:bg-blue-950 file:text-blue-300 file:cursor-pointer file:font-medium file:transition-all"
                       style={{ fontSize: '13px' }}
                     />
                     {mmVideoFile && <p className="mt-1 text-xs" style={{ color: '#10b981' }}>✅ {mmVideoFile.name}</p>}
