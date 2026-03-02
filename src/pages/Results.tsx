@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Download, Calendar, Trash2, RefreshCw, Globe, ChevronDown, ChevronUp,
   AlertTriangle, Shield, Phone, Heart, Brain, Activity, Sparkles
 } from 'lucide-react';
-import { getStoredResults, deleteResult, clearResults, type AnalysisResult } from '../lib/storage';
+import { getStoredResults, deleteResult, type AnalysisResult } from '../lib/storage';
 import { RadarChart } from '../components/RadarChart';
 import { EmotionGauge } from '../components/EmotionGauge';
 import {
@@ -23,27 +23,7 @@ import {
 } from '../lib/emotionInsights';
 import { generateSingleReportHTML, downloadHTML } from '../lib/reportGenerator';
 
-/* ── Animated Counter Hook ── */
-function useAnimatedCounter(target: number, duration = 1000) {
-  const [value, setValue] = useState(0);
-  const ref = useRef<number>(0);
-  useEffect(() => {
-    const start = ref.current;
-    const diff = target - start;
-    if (diff === 0) return;
-    const startTime = performance.now();
-    const step = (now: number) => {
-      const t = Math.min((now - startTime) / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
-      const current = start + diff * ease;
-      setValue(current);
-      ref.current = current;
-      if (t < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration]);
-  return Math.round(value);
-}
+
 
 /* ── Typing Text Component ── */
 function TypingText({ text, speed = 20 }: { text: string; speed?: number }) {
@@ -93,12 +73,12 @@ export function Results() {
     loadAnalyses();
   };
 
-  const handleClearAll = () => {
-    if (confirm('Are you sure you want to delete all results?')) {
-      clearResults();
-      loadAnalyses();
-      setSelectedAnalysis(null);
-    }
+  const handleClearSelected = () => {
+    if (!selectedAnalysis) return;
+    deleteResult(selectedAnalysis.id);
+    const remaining = analyses.filter(a => a.id !== selectedAnalysis.id);
+    setAnalyses(remaining);
+    setSelectedAnalysis(remaining.length > 0 ? remaining[0] : null);
   };
 
   const handleDownloadReport = () => {
@@ -219,8 +199,21 @@ export function Results() {
             <RefreshCw className="w-4 h-4" />
             <span>Refresh</span>
           </button>
-          <button onClick={handleClearAll} className="px-3 py-2 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors text-sm">
-            Clear All
+          <button
+            onClick={handleClearSelected}
+            disabled={!selectedAnalysis}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05))',
+              border: '1px solid rgba(239,68,68,0.15)',
+              color: '#f87171',
+            }}
+            onMouseEnter={e => { if (selectedAnalysis) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.1))'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(239,68,68,0.12)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05))'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            title="Delete current analysis"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear This</span>
           </button>
         </div>
       </div>
