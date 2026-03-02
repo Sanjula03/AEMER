@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, BarChart3, TrendingUp, RefreshCw } from 'lucide-react';
 import { getStoredResults, type AnalysisResult } from '../lib/storage';
-
+import { generateSummaryReportHTML, downloadHTML } from '../lib/reportGenerator';
 interface EmotionStats {
   emotion: string;
   count: number;
@@ -11,6 +11,7 @@ interface EmotionStats {
 
 export function Reports() {
   const [emotionStats, setEmotionStats] = useState<EmotionStats[]>([]);
+  const [results, setResults] = useState<AnalysisResult[]>([]);
   const [totalAnalyses, setTotalAnalyses] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +22,7 @@ export function Reports() {
   const loadReportData = () => {
     setLoading(true);
     const analyses = getStoredResults();
+    setResults(analyses);
     setTotalAnalyses(analyses.length);
 
     if (analyses.length > 0) {
@@ -76,18 +78,8 @@ export function Reports() {
   };
 
   const handleExportReport = () => {
-    const report = {
-      generated_at: new Date().toISOString(),
-      total_analyses: totalAnalyses,
-      emotion_breakdown: emotionStats,
-    };
-    const dataStr = JSON.stringify(report, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `emotion-report-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
+    const html = generateSummaryReportHTML(results, emotionStats);
+    downloadHTML(html, `AEMER-Analytics-${new Date().toISOString().split('T')[0]}.html`);
   };
 
   if (loading) {
