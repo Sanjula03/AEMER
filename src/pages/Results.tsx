@@ -73,7 +73,7 @@ export function Results() {
 
   const getEmotionGradient = (emotion: string) => {
     const colors: Record<string, string> = {
-      happy: 'from-yellow-400 to-orange-500',
+      happy: 'from-yellow-400 to-cyan-400',
       sad: 'from-blue-400 to-blue-600',
       angry: 'from-red-400 to-red-600',
       neutral: 'from-gray-400 to-gray-600',
@@ -102,7 +102,7 @@ export function Results() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-amber-200/70">Loading results...</div>
+        <div className="text-neutral-400">Loading results...</div>
       </div>
     );
   }
@@ -111,8 +111,8 @@ export function Results() {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">📊</div>
-        <h3 className="text-xl font-semibold text-amber-100 mb-2">No Results Yet</h3>
-        <p className="text-amber-200/60">Upload an audio, video, or text file in the Analyze tab to see your detailed report here.</p>
+        <h3 className="text-xl font-semibold text-white mb-2">No Results Yet</h3>
+        <p className="text-neutral-500">Upload an audio, video, or text file in the Analyze tab to see your detailed report here.</p>
       </div>
     );
   }
@@ -141,13 +141,13 @@ export function Results() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-amber-100 mb-2">Analysis Report</h2>
-          <p className="text-amber-200/70">
+          <h2 className="text-3xl font-bold text-white mb-2">Analysis Report</h2>
+          <p className="text-neutral-400">
             Detailed emotion insights &amp; mental health recommendations ({analyses.length} total)
           </p>
         </div>
         <div className="flex space-x-2">
-          <button onClick={loadAnalyses} className="p-2 text-amber-200 hover:text-amber-100 hover:bg-amber-900/30 rounded-lg transition-colors" title="Refresh">
+          <button onClick={loadAnalyses} className="p-2 text-neutral-300 hover:text-white hover:bg-cyan-900/20 rounded-lg transition-colors" title="Refresh">
             <RefreshCw className="w-5 h-5" />
           </button>
           <button onClick={handleClearAll} className="px-3 py-2 text-red-400 hover:bg-red-900/30 rounded-lg transition-colors text-sm">
@@ -158,31 +158,31 @@ export function Results() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ═══ LEFT SIDEBAR — Analysis list ═══ */}
-        <div className="lg:col-span-1 bg-stone-800/50 border border-amber-900/30 rounded-xl p-4 max-h-[700px] overflow-y-auto">
-          <h3 className="font-semibold text-amber-100 mb-3">Recent Analyses</h3>
+        <div className="lg:col-span-1 bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-4 max-h-[700px] overflow-y-auto">
+          <h3 className="font-semibold text-white mb-3">Recent Analyses</h3>
           <div className="space-y-2">
             {analyses.map((analysis) => (
               <div
                 key={analysis.id}
                 className={`relative group p-3 rounded-lg transition-colors cursor-pointer ${selectedAnalysis?.id === analysis.id
-                  ? 'bg-amber-900/40 border border-amber-600/50'
-                  : 'bg-stone-700/50 hover:bg-stone-700 border border-transparent'
+                  ? 'bg-cyan-900/30 border border-cyan-500/40'
+                  : 'bg-neutral-800/50 hover:bg-neutral-800 border border-transparent'
                   }`}
                 onClick={() => setSelectedAnalysis(analysis)}
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl">{getEmotionEmoji(analysis.emotion_label)}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-amber-100 capitalize">{analysis.emotion_label}</div>
-                    <div className="text-xs text-amber-200/60">
+                    <div className="font-medium text-white capitalize">{analysis.emotion_label}</div>
+                    <div className="text-xs text-neutral-500">
                       {new Date(analysis.timestamp).toLocaleString()}
                     </div>
                     {analysis.filename && (
-                      <div className="text-xs text-amber-400 truncate">{analysis.filename}</div>
+                      <div className="text-xs text-cyan-400 truncate">{analysis.filename}</div>
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <div className="text-sm font-medium text-amber-400">
+                    <div className="text-sm font-medium text-cyan-400">
                       {(analysis.confidence_score * 100).toFixed(0)}%
                     </div>
                     <span className="text-xs">{getWellbeingIndicator(analysis.emotion_label, analysis.confidence_score).emoji}</span>
@@ -231,41 +231,41 @@ export function Results() {
 
               {/* ─── Quality Warning ─── */}
               {sel.quality_warning && (
-                <div className="flex items-start space-x-3 bg-amber-900/30 border border-amber-600/40 rounded-xl p-4">
-                  <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-200">{sel.quality_warning}</p>
+                <div className="flex items-start space-x-3 bg-cyan-900/20 border border-cyan-500/40 rounded-xl p-4">
+                  <AlertTriangle className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-neutral-300">{sel.quality_warning}</p>
                 </div>
               )}
 
               {/* ─── 2. MENTAL STATE SUMMARY ─── */}
-              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-6">
-                <h4 className="font-semibold text-amber-100 mb-3 flex items-center space-x-2">
-                  <Brain className="w-5 h-5 text-teal-400" />
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-6">
+                <h4 className="font-semibold text-white mb-3 flex items-center space-x-2">
+                  <Brain className="w-5 h-5 text-cyan-400" />
                   <span>Mental State Summary</span>
                 </h4>
-                <p className="text-amber-200/80 text-sm leading-relaxed">{mentalSummary}</p>
+                <p className="text-neutral-300 text-sm leading-relaxed">{mentalSummary}</p>
 
                 {/* Contextual Tip */}
-                <div className="mt-4 bg-teal-900/20 border border-teal-700/30 rounded-lg p-3">
-                  <p className="text-sm text-teal-300">{contextualTip}</p>
+                <div className="mt-4 bg-cyan-900/20 border border-cyan-700/30 rounded-lg p-3">
+                  <p className="text-sm text-cyan-300">{contextualTip}</p>
                 </div>
               </div>
 
               {/* ─── 3. CONFIDENCE GAUGE + VALENCE/AROUSAL ─── */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Confidence Gauge */}
-                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
-                  <h4 className="font-semibold text-amber-100 mb-2 text-center flex items-center justify-center space-x-2">
-                    <Activity className="w-4 h-4 text-teal-400" />
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-2 text-center flex items-center justify-center space-x-2">
+                    <Activity className="w-4 h-4 text-cyan-400" />
                     <span>Confidence Score</span>
                   </h4>
                   <EmotionGauge value={sel.confidence_score} label={confidenceLabel} />
                 </div>
 
                 {/* Valence + Arousal */}
-                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5 space-y-4">
-                  <h4 className="font-semibold text-amber-100 flex items-center space-x-2">
-                    <Heart className="w-4 h-4 text-teal-400" />
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 space-y-4">
+                  <h4 className="font-semibold text-white flex items-center space-x-2">
+                    <Heart className="w-4 h-4 text-cyan-400" />
                     <span>Emotional Profile</span>
                   </h4>
 
@@ -276,7 +276,7 @@ export function Results() {
                       <div className={`font-semibold text-sm ${valenceInfo.color}`}>
                         {valenceInfo.label} Valence
                       </div>
-                      <p className="text-xs text-amber-200/60">
+                      <p className="text-xs text-neutral-500">
                         Emotional polarity of the detected state
                       </p>
                     </div>
@@ -289,7 +289,7 @@ export function Results() {
                       <div className={`font-semibold text-sm ${arousalInfo.color}`}>
                         {arousalInfo.label}
                       </div>
-                      <p className="text-xs text-amber-200/60">
+                      <p className="text-xs text-neutral-500">
                         {arousalInfo.description}
                       </p>
                     </div>
@@ -297,12 +297,12 @@ export function Results() {
 
                   {/* Well-being full description */}
                   {wellbeing && (
-                    <div className="bg-stone-700/30 rounded-lg p-3 border border-stone-600/30">
+                    <div className="bg-neutral-800/30 rounded-lg p-3 border border-neutral-700/30">
                       <div className="flex items-center space-x-2 mb-1">
                         <span>{wellbeing.emoji}</span>
                         <span className={`font-semibold text-sm ${wellbeing.color}`}>{wellbeing.label}</span>
                       </div>
-                      <p className="text-xs text-amber-200/60">{wellbeing.description}</p>
+                      <p className="text-xs text-neutral-500">{wellbeing.description}</p>
                     </div>
                   )}
                 </div>
@@ -310,28 +310,28 @@ export function Results() {
 
               {/* ─── 4. DOMINANT vs SECONDARY EMOTION ─── */}
               {dominantSecondary && (
-                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
-                  <h4 className="font-semibold text-amber-100 mb-3">Dominant vs. Secondary Emotion</h4>
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-3">Dominant vs. Secondary Emotion</h4>
                   <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="bg-teal-900/20 border border-teal-700/30 rounded-lg p-3 text-center">
+                    <div className="bg-cyan-900/20 border border-cyan-700/30 rounded-lg p-3 text-center">
                       <div className="text-3xl mb-1">{getEmotionEmoji(dominantSecondary.dominant.emotion)}</div>
-                      <div className="text-sm font-semibold text-teal-300 capitalize">{dominantSecondary.dominant.emotion}</div>
-                      <div className="text-xs text-amber-200/60">{(dominantSecondary.dominant.probability * 100).toFixed(1)}%</div>
+                      <div className="text-sm font-semibold text-cyan-300 capitalize">{dominantSecondary.dominant.emotion}</div>
+                      <div className="text-xs text-neutral-500">{(dominantSecondary.dominant.probability * 100).toFixed(1)}%</div>
                     </div>
-                    <div className="bg-stone-700/30 border border-stone-600/30 rounded-lg p-3 text-center">
+                    <div className="bg-neutral-800/30 border border-neutral-700/30 rounded-lg p-3 text-center">
                       <div className="text-3xl mb-1">{getEmotionEmoji(dominantSecondary.secondary.emotion)}</div>
-                      <div className="text-sm font-semibold text-amber-200/80 capitalize">{dominantSecondary.secondary.emotion}</div>
-                      <div className="text-xs text-amber-200/60">{(dominantSecondary.secondary.probability * 100).toFixed(1)}%</div>
+                      <div className="text-sm font-semibold text-neutral-300 capitalize">{dominantSecondary.secondary.emotion}</div>
+                      <div className="text-xs text-neutral-500">{(dominantSecondary.secondary.probability * 100).toFixed(1)}%</div>
                     </div>
                   </div>
-                  <p className="text-xs text-amber-200/60 italic">{dominantSecondary.interpretation}</p>
+                  <p className="text-xs text-neutral-500 italic">{dominantSecondary.interpretation}</p>
                 </div>
               )}
 
               {/* ─── 5. RADAR CHART ─── */}
               {sel.all_probabilities && Object.keys(sel.all_probabilities).length > 2 && (
-                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
-                  <h4 className="font-semibold text-amber-100 mb-3 text-center">Emotion Distribution</h4>
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-3 text-center">Emotion Distribution</h4>
                   <RadarChart data={sel.all_probabilities} size={280} />
                   {/* Probability list below radar */}
                   <div className="mt-4 space-y-1.5">
@@ -340,14 +340,14 @@ export function Results() {
                       .map(([emotion, probability]) => (
                         <div key={emotion} className="flex items-center space-x-3">
                           <span className="text-lg w-7">{getEmotionEmoji(emotion)}</span>
-                          <span className="w-20 text-amber-200 capitalize text-sm font-medium">{emotion}</span>
-                          <div className="flex-1 bg-stone-700 rounded-full h-2">
+                          <span className="w-20 text-neutral-300 capitalize text-sm font-medium">{emotion}</span>
+                          <div className="flex-1 bg-neutral-800 rounded-full h-2">
                             <div
                               className={`bg-gradient-to-r ${getEmotionGradient(emotion)} h-2 rounded-full`}
                               style={{ width: `${probability * 100}%` }}
                             />
                           </div>
-                          <span className="w-14 text-right text-sm font-medium text-amber-200/70">
+                          <span className="w-14 text-right text-sm font-medium text-neutral-400">
                             {(probability * 100).toFixed(1)}%
                           </span>
                         </div>
@@ -358,58 +358,58 @@ export function Results() {
 
               {/* ─── 6. MODALITY BREAKDOWN ─── */}
               {sel.modalities_used && sel.modalities_used.length > 1 && (
-                <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
-                  <h4 className="font-semibold text-amber-100 mb-1 flex items-center space-x-2">
-                    <Globe className="w-4 h-4 text-teal-400" />
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                  <h4 className="font-semibold text-white mb-1 flex items-center space-x-2">
+                    <Globe className="w-4 h-4 text-cyan-400" />
                     <span>Modality Breakdown</span>
                   </h4>
                   {modalityAgreement && (
-                    <p className="text-xs text-amber-200/60 mb-4">
+                    <p className="text-xs text-neutral-500 mb-4">
                       {modalityAgreement.emoji} {modalityAgreement.description}
                       {sel.fusion_method && ` • Fusion: ${sel.fusion_method.replace('_', ' ')}`}
                     </p>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {sel.audio_result && (
-                      <div className="bg-teal-900/20 border border-teal-700/30 rounded-xl p-4">
+                      <div className="bg-cyan-900/20 border border-cyan-700/30 rounded-xl p-4">
                         <div className="text-lg mb-1">🎤</div>
-                        <div className="text-sm font-semibold text-teal-300">Audio</div>
-                        <div className="text-xl font-bold text-amber-100 capitalize mt-1">{sel.audio_result.emotion_label}</div>
-                        <div className="text-xs text-amber-200/60 mt-1">
+                        <div className="text-sm font-semibold text-cyan-300">Audio</div>
+                        <div className="text-xl font-bold text-white capitalize mt-1">{sel.audio_result.emotion_label}</div>
+                        <div className="text-xs text-neutral-500 mt-1">
                           Confidence: {(sel.audio_result.confidence_score * 100).toFixed(0)}%
                         </div>
-                        <div className="text-xs text-amber-200/40">
+                        <div className="text-xs text-neutral-600">
                           Weight: {(sel.audio_result.weight * 100).toFixed(0)}%
                         </div>
                         {sel.audio_result.detected_accent && (
-                          <div className="mt-2 text-xs text-indigo-300">
+                          <div className="mt-2 text-xs text-cyan-300">
                             {getAccentInfo(sel.audio_result.detected_accent).flag} {getAccentInfo(sel.audio_result.detected_accent).label}
                           </div>
                         )}
                       </div>
                     )}
                     {sel.text_result && (
-                      <div className="bg-purple-900/20 border border-purple-700/30 rounded-xl p-4">
+                      <div className="bg-violet-900/20 border border-violet-700/30 rounded-xl p-4">
                         <div className="text-lg mb-1">📝</div>
                         <div className="text-sm font-semibold text-purple-300">Text</div>
-                        <div className="text-xl font-bold text-amber-100 capitalize mt-1">{sel.text_result.emotion_label}</div>
-                        <div className="text-xs text-amber-200/60 mt-1">
+                        <div className="text-xl font-bold text-white capitalize mt-1">{sel.text_result.emotion_label}</div>
+                        <div className="text-xs text-neutral-500 mt-1">
                           Confidence: {(sel.text_result.confidence_score * 100).toFixed(0)}%
                         </div>
-                        <div className="text-xs text-amber-200/40">
+                        <div className="text-xs text-neutral-600">
                           Weight: {(sel.text_result.weight * 100).toFixed(0)}%
                         </div>
                       </div>
                     )}
                     {sel.video_result && (
-                      <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
+                      <div className="bg-sky-900/20 border border-sky-700/30 rounded-xl p-4">
                         <div className="text-lg mb-1">📹</div>
                         <div className="text-sm font-semibold text-blue-300">Video</div>
-                        <div className="text-xl font-bold text-amber-100 capitalize mt-1">{sel.video_result.emotion_label}</div>
-                        <div className="text-xs text-amber-200/60 mt-1">
+                        <div className="text-xl font-bold text-white capitalize mt-1">{sel.video_result.emotion_label}</div>
+                        <div className="text-xs text-neutral-500 mt-1">
                           Confidence: {(sel.video_result.confidence_score * 100).toFixed(0)}%
                         </div>
-                        <div className="text-xs text-amber-200/40">
+                        <div className="text-xs text-neutral-600">
                           Weight: {(sel.video_result.weight * 100).toFixed(0)}%
                         </div>
                       </div>
@@ -419,8 +419,8 @@ export function Results() {
               )}
 
               {/* ─── 7. MENTAL HEALTH CONTEXT & COPING STRATEGIES ─── */}
-              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
-                <h4 className="font-semibold text-amber-100 mb-4 flex items-center space-x-2">
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                <h4 className="font-semibold text-white mb-4 flex items-center space-x-2">
                   <Heart className="w-5 h-5 text-pink-400" />
                   <span>Mental Health Context &amp; Recommendations</span>
                 </h4>
@@ -428,11 +428,11 @@ export function Results() {
                 {/* Coping Strategies */}
                 <div className="space-y-3 mb-5">
                   {copingStrategies.map((strategy, i) => (
-                    <div key={i} className="flex items-start space-x-3 bg-stone-700/30 rounded-lg p-3 border border-stone-600/20">
+                    <div key={i} className="flex items-start space-x-3 bg-neutral-800/30 rounded-lg p-3 border border-neutral-700/20">
                       <span className="text-2xl flex-shrink-0">{strategy.icon}</span>
                       <div>
-                        <div className="text-sm font-semibold text-amber-100">{strategy.title}</div>
-                        <p className="text-xs text-amber-200/60 mt-0.5 leading-relaxed">{strategy.description}</p>
+                        <div className="text-sm font-semibold text-white">{strategy.title}</div>
+                        <p className="text-xs text-neutral-500 mt-0.5 leading-relaxed">{strategy.description}</p>
                       </div>
                     </div>
                   ))}
@@ -440,10 +440,10 @@ export function Results() {
 
                 {/* Helpline Toggle */}
                 {(wellbeing?.level === 'elevated_concern' || wellbeing?.level === 'mild_concern') && (
-                  <div className="border-t border-amber-900/20 pt-4">
+                  <div className="border-t border-cyan-900/15 pt-4">
                     <button
                       onClick={() => setShowHelplines(!showHelplines)}
-                      className="flex items-center space-x-2 text-sm text-amber-200/70 hover:text-amber-100 transition-colors w-full"
+                      className="flex items-center space-x-2 text-sm text-neutral-400 hover:text-white transition-colors w-full"
                     >
                       <Phone className="w-4 h-4" />
                       <span>Need to Talk? Mental Health Helplines</span>
@@ -452,12 +452,12 @@ export function Results() {
                     {showHelplines && (
                       <div className="mt-3 space-y-2">
                         {helplines.map((line, i) => (
-                          <div key={i} className="flex items-center justify-between bg-stone-700/30 rounded-lg p-3 border border-stone-600/20">
+                          <div key={i} className="flex items-center justify-between bg-neutral-800/30 rounded-lg p-3 border border-neutral-700/20">
                             <div>
-                              <div className="text-sm font-medium text-amber-100">{line.name}</div>
-                              <div className="text-xs text-amber-200/50">{line.region} • {line.available}</div>
+                              <div className="text-sm font-medium text-white">{line.name}</div>
+                              <div className="text-xs text-neutral-500">{line.region} • {line.available}</div>
                             </div>
-                            <div className="text-sm font-mono text-teal-400">{line.number}</div>
+                            <div className="text-sm font-mono text-cyan-400">{line.number}</div>
                           </div>
                         ))}
                       </div>
@@ -467,55 +467,55 @@ export function Results() {
               </div>
 
               {/* ─── 8. DISCLAIMER ─── */}
-              <div className="flex items-start space-x-3 bg-stone-800/30 border border-stone-700/30 rounded-xl p-4">
-                <Shield className="w-5 h-5 text-amber-200/40 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-200/40 leading-relaxed">{DISCLAIMER_TEXT}</p>
+              <div className="flex items-start space-x-3 bg-neutral-900/30 border border-neutral-800/30 rounded-xl p-4">
+                <Shield className="w-5 h-5 text-neutral-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-neutral-600 leading-relaxed">{DISCLAIMER_TEXT}</p>
               </div>
 
               {/* ─── 9. METADATA (Collapsible) ─── */}
-              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl overflow-hidden">
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setShowMetadata(!showMetadata)}
-                  className="w-full flex items-center justify-between p-4 hover:bg-stone-700/20 transition-colors"
+                  className="w-full flex items-center justify-between p-4 hover:bg-neutral-800/20 transition-colors"
                 >
-                  <h4 className="font-semibold text-amber-100 flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-amber-400" />
+                  <h4 className="font-semibold text-white flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-cyan-400" />
                     <span>Analysis Details &amp; Metadata</span>
                   </h4>
-                  {showMetadata ? <ChevronUp className="w-4 h-4 text-amber-200/60" /> : <ChevronDown className="w-4 h-4 text-amber-200/60" />}
+                  {showMetadata ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
                 </button>
                 {showMetadata && (
-                  <div className="px-4 pb-4 space-y-2 text-sm border-t border-amber-900/20 pt-3">
+                  <div className="px-4 pb-4 space-y-2 text-sm border-t border-cyan-900/15 pt-3">
                     <div className="flex justify-between">
-                      <span className="text-amber-200/70">Analysis ID:</span>
-                      <span className="font-mono text-amber-100 text-xs">{sel.id}</span>
+                      <span className="text-neutral-400">Analysis ID:</span>
+                      <span className="font-mono text-white text-xs">{sel.id}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-amber-200/70">Timestamp:</span>
-                      <span className="text-amber-100">{new Date(sel.timestamp).toLocaleString()}</span>
+                      <span className="text-neutral-400">Timestamp:</span>
+                      <span className="text-white">{new Date(sel.timestamp).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-amber-200/70">Input Type:</span>
-                      <span className="text-amber-100 capitalize">{sel.input_type}</span>
+                      <span className="text-neutral-400">Input Type:</span>
+                      <span className="text-white capitalize">{sel.input_type}</span>
                     </div>
                     {sel.filename && (
                       <div className="flex justify-between">
-                        <span className="text-amber-200/70">Filename:</span>
-                        <span className="text-amber-100 truncate ml-4">{sel.filename}</span>
+                        <span className="text-neutral-400">Filename:</span>
+                        <span className="text-white truncate ml-4">{sel.filename}</span>
                       </div>
                     )}
                     {sel.detected_accent && (
                       <div className="flex justify-between">
-                        <span className="text-amber-200/70">Detected Accent:</span>
-                        <span className="text-amber-100">
+                        <span className="text-neutral-400">Detected Accent:</span>
+                        <span className="text-white">
                           {getAccentInfo(sel.detected_accent).flag} {getAccentInfo(sel.detected_accent).label}
                         </span>
                       </div>
                     )}
                     {sel.fusion_method && (
                       <div className="flex justify-between">
-                        <span className="text-amber-200/70">Fusion Method:</span>
-                        <span className="text-amber-100 capitalize">{sel.fusion_method.replace('_', ' ')}</span>
+                        <span className="text-neutral-400">Fusion Method:</span>
+                        <span className="text-white capitalize">{sel.fusion_method.replace('_', ' ')}</span>
                       </div>
                     )}
                   </div>
@@ -523,19 +523,19 @@ export function Results() {
               </div>
 
               {/* ─── 10. DOWNLOAD REPORT ─── */}
-              <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-5">
-                <h4 className="font-semibold text-amber-100 mb-3 flex items-center space-x-2">
-                  <Download className="w-4 h-4 text-amber-400" />
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                <h4 className="font-semibold text-white mb-3 flex items-center space-x-2">
+                  <Download className="w-4 h-4 text-cyan-400" />
                   <span>Export Report</span>
                 </h4>
                 <button
                   onClick={handleDownloadReport}
-                  className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors shadow-lg shadow-teal-800/30 text-sm font-medium"
+                  className="flex items-center space-x-2 px-5 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 transition-colors shadow-lg shadow-cyan-800/30 text-sm font-medium"
                 >
                   <Download className="w-4 h-4" />
                   <span>Download Full Report</span>
                 </button>
-                <p className="text-xs text-amber-200/40 mt-2">Downloads as a styled HTML document. Open in any browser or print to PDF.</p>
+                <p className="text-xs text-neutral-600 mt-2">Downloads as a styled HTML document. Open in any browser or print to PDF.</p>
               </div>
             </>
           )}

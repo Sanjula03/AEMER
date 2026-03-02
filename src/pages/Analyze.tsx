@@ -275,148 +275,150 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
   return (
     <>
       <div className="max-w-4xl mx-auto space-y-8">
-        <div>
-          <h2 className="text-3xl font-bold text-amber-100 mb-2">Analyze Emotion</h2>
-          <p className="text-amber-200/70">
+        <div className="animate-fade-in-up">
+          <h2 className="text-3xl font-bold text-white mb-2">Analyze Emotion</h2>
+          <p style={{ color: '#737373' }}>
             Submit audio, video, or text for multimodal emotion recognition
           </p>
         </div>
 
+        {/* Step Indicator */}
         <div className="flex items-center justify-center mb-8">
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 1 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-              1
-            </div>
-            <div className={`h-1 w-24 ${step >= 2 ? 'bg-teal-600' : 'bg-gray-200'}`} />
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 2 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-              2
-            </div>
-            <div className={`h-1 w-24 ${step >= 3 ? 'bg-teal-600' : 'bg-gray-200'}`} />
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= 3 ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-              3
-            </div>
+          <div className="flex items-center space-x-2">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center">
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm transition-all"
+                  style={
+                    step >= s
+                      ? { background: 'linear-gradient(135deg, #06b6d4, #0891b2)', color: '#fff', boxShadow: '0 4px 15px rgba(6,182,212,0.3)' }
+                      : { background: '#171717', color: '#525252', border: '1px solid rgba(255,255,255,0.06)' }
+                  }
+                >
+                  {s}
+                </div>
+                {s < 3 && (
+                  <div
+                    className="h-0.5 w-20 mx-2 rounded-full transition-all"
+                    style={{ background: step > s ? '#06b6d4' : '#1f1f1f' }}
+                  />
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
         {step === 1 && (
-          <div>
-            <h3 className="text-2xl font-bold text-amber-100 mb-6">Step 1: Select Input Type</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <button
-                onClick={() => handleInputTypeSelect('audio')}
-                className="relative overflow-hidden bg-gradient-to-br from-teal-400 to-emerald-500 text-white rounded-2xl p-8 hover:scale-105 hover:shadow-xl shadow-lg shadow-teal-500/30 transition-all group"
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-                <Mic className="w-14 h-14 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-xl mb-2">Audio</h4>
-                <p className="text-white/80">
-                  Upload audio for emotion analysis
-                </p>
-              </button>
-
-              <button
-                onClick={() => handleInputTypeSelect('video')}
-                className="relative overflow-hidden bg-gradient-to-br from-blue-400 to-indigo-500 text-white rounded-2xl p-8 hover:scale-105 hover:shadow-xl shadow-lg shadow-blue-500/30 transition-all group"
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-                <Video className="w-14 h-14 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-xl mb-2">Video</h4>
-                <p className="text-white/80">
-                  Upload video with audio & visual cues
-                </p>
-              </button>
-
-              <button
-                onClick={() => handleInputTypeSelect('text')}
-                className="relative overflow-hidden bg-gradient-to-br from-purple-400 to-pink-500 text-white rounded-2xl p-8 hover:scale-105 hover:shadow-xl shadow-lg shadow-purple-500/30 transition-all group"
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-                <FileText className="w-14 h-14 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-xl mb-2">Text</h4>
-                <p className="text-white/80">
-                  Analyze text for emotional content
-                </p>
-              </button>
-
-              <button
-                onClick={() => handleInputTypeSelect('multimodal')}
-                className="relative overflow-hidden bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl p-8 hover:scale-105 hover:shadow-xl shadow-lg shadow-amber-500/30 transition-all group"
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-                <Layers className="w-14 h-14 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-xl mb-2">Multimodal</h4>
-                <p className="text-white/80">
-                  Combine audio, text & video
-                </p>
-              </button>
+          <div className="animate-fade-in-up">
+            <h3 className="text-xl font-bold text-white mb-6">Step 1: Select Input Type</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                { type: 'audio' as InputType, icon: Mic, label: 'Audio', desc: 'Upload audio for emotion analysis', color: '#06b6d4' },
+                { type: 'video' as InputType, icon: Video, label: 'Video', desc: 'Upload video with audio & visual cues', color: '#3b82f6' },
+                { type: 'text' as InputType, icon: FileText, label: 'Text', desc: 'Analyze text for emotional content', color: '#a855f7' },
+                { type: 'multimodal' as InputType, icon: Layers, label: 'Multimodal', desc: 'Combine audio, text & video', color: '#10b981' },
+              ].map(({ type, icon: Icon, label, desc, color }, idx) => (
+                <button
+                  key={type}
+                  onClick={() => handleInputTypeSelect(type)}
+                  className="relative overflow-hidden rounded-2xl p-6 text-center transition-all hover:scale-[1.03] group animate-fade-in-up"
+                  style={{
+                    background: '#111111',
+                    border: `1px solid ${color}20`,
+                    animationDelay: `${idx * 100}ms`,
+                    animationFillMode: 'backwards',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = `${color}50`;
+                    e.currentTarget.style.boxShadow = `0 8px 30px ${color}15`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = `${color}20`;
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div className="absolute top-0 left-0 right-0 h-px transition-opacity opacity-0 group-hover:opacity-100" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+                  <div className="p-3 rounded-xl mx-auto w-fit mb-4 transition-transform group-hover:scale-110" style={{ background: `${color}15` }}>
+                    <Icon className="w-8 h-8" style={{ color }} />
+                  </div>
+                  <h4 className="font-bold text-lg text-white mb-1">{label}</h4>
+                  <p className="text-xs" style={{ color: '#737373' }}>{desc}</p>
+                </button>
+              ))}
             </div>
           </div>
         )}
 
         {step === 2 && inputType && (
-          <div>
-            <h3 className="text-xl font-semibold text-amber-100 mb-4">Step 2: Provide Input</h3>
-            <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-8">
+          <div className="animate-fade-in-up">
+            <h3 className="text-xl font-semibold text-white mb-4">Step 2: Provide Input</h3>
+            <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid rgba(6,182,212,0.1)' }}>
               {inputType === 'multimodal' ? (
-                <div className="space-y-6">
-                  <p className="text-amber-200/70 text-sm">Provide at least 2 types of input for fusion analysis</p>
+                <div className="space-y-5">
+                  <p className="text-sm" style={{ color: '#737373' }}>Provide at least 2 types of input for fusion analysis</p>
 
                   {/* Audio Upload */}
-                  <div className="border border-amber-900/30 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-teal-400 mb-2">🎤 Audio (optional)</label>
+                  <div className="rounded-lg p-4" style={{ border: '1px solid rgba(6,182,212,0.1)', background: 'rgba(6,182,212,0.03)' }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#06b6d4' }}>🎤 Audio (optional)</label>
                     <input
                       type="file"
                       accept="audio/*"
                       onChange={(e) => setMmAudioFile(e.target.files?.[0] || null)}
-                      className="text-sm text-amber-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-teal-600 file:text-white hover:file:bg-teal-700"
+                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-white file:cursor-pointer"
+                      style={{ fontSize: '13px' }}
                     />
-                    {mmAudioFile && <p className="mt-1 text-xs text-amber-200/60">✅ {mmAudioFile.name}</p>}
+                    {mmAudioFile && <p className="mt-1 text-xs" style={{ color: '#10b981' }}>✅ {mmAudioFile.name}</p>}
                   </div>
 
                   {/* Text Input */}
-                  <div className="border border-amber-900/30 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-purple-400 mb-2">📝 Text (optional)</label>
+                  <div className="rounded-lg p-4" style={{ border: '1px solid rgba(168,85,247,0.1)', background: 'rgba(168,85,247,0.03)' }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#a855f7' }}>📝 Text (optional)</label>
                     <textarea
                       value={mmTextInput}
                       onChange={(e) => setMmTextInput(e.target.value)}
                       rows={2}
-                      className="w-full px-4 py-2 bg-stone-700/50 border border-amber-900/30 rounded-lg text-amber-100 focus:ring-2 focus:ring-teal-500 text-sm"
+                      className="w-full px-4 py-2 rounded-lg text-sm focus:outline-none"
+                      style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.06)', color: '#e5e5e5' }}
                       placeholder="Type text here..."
                     />
                   </div>
 
                   {/* Video/Image Upload */}
-                  <div className="border border-amber-900/30 rounded-lg p-4">
-                    <label className="block text-sm font-medium text-blue-400 mb-2">📹 Image/Video (optional)</label>
+                  <div className="rounded-lg p-4" style={{ border: '1px solid rgba(59,130,246,0.1)', background: 'rgba(59,130,246,0.03)' }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#3b82f6' }}>📹 Image/Video (optional)</label>
                     <input
                       type="file"
                       accept="video/*,image/*"
                       onChange={(e) => setMmVideoFile(e.target.files?.[0] || null)}
-                      className="text-sm text-amber-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-white file:cursor-pointer"
+                      style={{ fontSize: '13px' }}
                     />
-                    {mmVideoFile && <p className="mt-1 text-xs text-amber-200/60">✅ {mmVideoFile.name}</p>}
+                    {mmVideoFile && <p className="mt-1 text-xs" style={{ color: '#10b981' }}>✅ {mmVideoFile.name}</p>}
                   </div>
                 </div>
               ) : inputType === 'text' ? (
                 <div>
-                  <label className="block text-sm font-medium text-amber-200 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#a3a3a3' }}>
                     Enter text to analyze
                   </label>
                   <textarea
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
                     rows={4}
-                    className="w-full px-4 py-3 bg-stone-700/50 border border-amber-900/30 rounded-lg text-amber-100 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 py-3 rounded-lg focus:outline-none transition-all"
+                    style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.15)', color: '#e5e5e5' }}
                     placeholder="Type or paste text here..."
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#06b6d4'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(6,182,212,0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.15)'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-amber-900/30 rounded-xl p-8 text-center">
+                <div
+                  className="border-2 border-dashed rounded-xl p-10 text-center transition-all"
+                  style={{ borderColor: 'rgba(6,182,212,0.2)', background: 'rgba(6,182,212,0.02)' }}
+                >
                   <div className="flex flex-col items-center">
-                    <Upload className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+                    <Upload className="w-10 h-10 mx-auto mb-4" style={{ color: '#06b6d4' }} />
                     <input
                       type="file"
                       onChange={handleFileChange}
@@ -426,20 +428,24 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                     />
                     <label
                       htmlFor="file-upload"
-                      className="cursor-pointer text-teal-600 hover:text-teal-700 font-medium"
+                      className="cursor-pointer font-medium text-sm transition-colors"
+                      style={{ color: '#06b6d4' }}
                     >
-                      Choose file
+                      Click to choose a file
                     </label>
+                    <p className="text-xs mt-1" style={{ color: '#525252' }}>
+                      {inputType === 'audio' ? 'MP3, WAV, OGG' : 'MP4, MOV, WEBM, JPG, PNG'}
+                    </p>
                     {file && (
-                      <p className="mt-2 text-sm text-gray-600">Selected: {file.name}</p>
+                      <p className="mt-3 text-sm" style={{ color: '#10b981' }}>✅ {file.name}</p>
                     )}
                   </div>
                 </div>
               )}
 
               {error && (
-                <div className="mt-4 flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-                  <AlertCircle className="w-5 h-5" />
+                <div className="mt-4 flex items-center space-x-2 p-3 rounded-lg" style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185' }}>
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span className="text-sm">{error}</span>
                 </div>
               )}
@@ -447,7 +453,8 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
               <div className="flex space-x-4 mt-6">
                 <button
                   onClick={handleReset}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 rounded-xl font-medium text-sm transition-all"
+                  style={{ border: '1px solid rgba(255,255,255,0.08)', color: '#a3a3a3', background: 'transparent' }}
                 >
                   Back
                 </button>
@@ -458,7 +465,8 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
                     ((inputType === 'audio' || inputType === 'video') && !file) ||
                     (inputType === 'multimodal' && [mmAudioFile, mmVideoFile, mmTextInput.trim()].filter(Boolean).length < 2)
                   }
-                  className="flex-1 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 rounded-xl text-white font-medium text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', boxShadow: '0 4px 15px rgba(6,182,212,0.3)' }}
                 >
                   Continue
                 </button>
@@ -468,45 +476,56 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
         )}
 
         {step === 3 && (
-          <div>
-            <h3 className="text-xl font-semibold text-amber-100 mb-4">Step 3: Review & Submit</h3>
-            <div className="bg-stone-800/50 border border-amber-900/30 rounded-xl p-8">
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between">
-                  <span className="text-amber-200/70">Input Type:</span>
-                  <span className="font-medium text-amber-100 capitalize">{inputType}</span>
+          <div className="animate-fade-in-up">
+            <h3 className="text-xl font-semibold text-white mb-4">Step 3: Review & Submit</h3>
+            <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid rgba(6,182,212,0.1)' }}>
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ color: '#737373' }}>Input Type</span>
+                  <span className="font-medium text-white capitalize">{inputType}</span>
                 </div>
                 {inputType === 'text' && (
-                  <div className="flex justify-between">
-                    <span className="text-amber-200/70">Text Length:</span>
-                    <span className="font-medium text-amber-100">{textInput.length} characters</span>
+                  <div className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <span style={{ color: '#737373' }}>Text Length</span>
+                    <span className="font-medium text-white">{textInput.length} characters</span>
                   </div>
                 )}
                 {file && (
-                  <div className="flex justify-between">
-                    <span className="text-amber-200/70">File:</span>
-                    <span className="font-medium text-amber-100">{file.name}</span>
+                  <div className="flex justify-between items-center py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <span style={{ color: '#737373' }}>File</span>
+                    <span className="font-medium text-white">{file.name}</span>
+                  </div>
+                )}
+                {inputType === 'multimodal' && (
+                  <div className="flex justify-between items-center py-2">
+                    <span style={{ color: '#737373' }}>Inputs</span>
+                    <span className="font-medium text-white">
+                      {[mmAudioFile && '🎤', mmTextInput.trim() && '📝', mmVideoFile && '📹'].filter(Boolean).join(' + ')}
+                    </span>
                   </div>
                 )}
               </div>
 
               {success ? (
-                <div className="flex items-center justify-center space-x-3 text-green-400 py-4">
+                <div className="flex items-center justify-center space-x-3 py-4" style={{ color: '#10b981' }}>
                   <CheckCircle className="w-6 h-6" />
-                  <span className="font-medium">Analysis complete! Redirecting...</span>
+                  <span className="font-medium">Analysis complete!</span>
                 </div>
               ) : (
                 <div className="flex space-x-4">
                   <button
                     onClick={() => setStep(2)}
                     disabled={processing}
-                    className="flex-1 px-6 py-3 border border-amber-700 text-amber-200 rounded-xl hover:bg-amber-900/30 transition-colors disabled:opacity-50">
+                    className="flex-1 px-6 py-3 rounded-xl font-medium text-sm transition-all disabled:opacity-40"
+                    style={{ border: '1px solid rgba(255,255,255,0.08)', color: '#a3a3a3' }}
+                  >
                     Back
                   </button>
                   <button
                     onClick={handleSubmit}
                     disabled={processing}
-                    className="flex-1 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2"
+                    className="flex-1 px-6 py-3 rounded-xl text-white font-medium text-sm transition-all disabled:opacity-40 flex items-center justify-center space-x-2"
+                    style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', boxShadow: '0 4px 15px rgba(6,182,212,0.3)' }}
                   >
                     {processing ? (
                       <>
@@ -521,8 +540,8 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
               )}
 
               {error && (
-                <div className="mt-4 flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-                  <AlertCircle className="w-5 h-5" />
+                <div className="mt-4 flex items-center space-x-2 p-3 rounded-lg" style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185' }}>
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span className="text-sm">{error}</span>
                 </div>
               )}

@@ -89,7 +89,7 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
                 <div style="font-weight:500;color:#e5e7eb;font-size:13px">${h.name}</div>
                 <div style="font-size:11px;color:#6b7280">${h.region} • ${h.available}</div>
             </div>
-            <div style="font-family:monospace;color:#2dd4bf;font-size:13px;font-weight:600">${h.number}</div>
+            <div style="font-family:monospace;color:#06b6d4;font-size:13px;font-weight:600">${h.number}</div>
         </div>
     `).join('');
 
@@ -99,9 +99,9 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
         const modCards = [];
         if (result.audio_result) {
             modCards.push(`
-                <div style="flex:1;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.2);border-radius:10px;padding:14px;text-align:center">
+                <div style="flex:1;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:10px;padding:14px;text-align:center">
                     <div style="font-size:20px">🎤</div>
-                    <div style="font-weight:600;color:#2dd4bf;font-size:13px;margin-top:4px">Audio</div>
+                    <div style="font-weight:600;color:#06b6d4;font-size:13px;margin-top:4px">Audio</div>
                     <div style="font-size:18px;font-weight:700;color:#e5e7eb;text-transform:capitalize;margin-top:6px">${result.audio_result.emotion_label}</div>
                     <div style="font-size:11px;color:#9ca3af;margin-top:4px">Confidence: ${(result.audio_result.confidence_score * 100).toFixed(0)}%</div>
                 </div>
@@ -145,7 +145,7 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #1c1917 100%);
+            background: linear-gradient(135deg, #050505 0%, #0a0a0a 50%, #050505 100%);
             color: #d4d4d8;
             min-height: 100vh;
             padding: 40px 20px;
@@ -170,7 +170,7 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
             margin-bottom: 16px;
         }
         @media print {
-            body { background: #1c1917; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { background: #050505; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -178,8 +178,8 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
     <div class="container">
         <!-- Header -->
         <div style="text-align:center;margin-bottom:24px">
-            <div style="font-size:28px;font-weight:800;color:#fef3c7;letter-spacing:-0.02em">AEMER</div>
-            <div style="font-size:12px;color:#92816a;margin-top:2px">Accent-Aware Emotion Recognition</div>
+            <div style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.02em">AEMER</div>
+            <div style="font-size:12px;color:#525252;margin-top:2px">Accent-Aware Emotion Recognition</div>
         </div>
 
         <!-- Emotion Result -->
@@ -202,8 +202,8 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
         <div class="section">
             <h3 style="font-size:16px;font-weight:600;color:#e5e7eb;margin-bottom:10px">🧠 Mental State Summary</h3>
             <p style="font-size:14px;color:#a1a1aa;line-height:1.7">${summary}</p>
-            <div style="margin-top:12px;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15);border-radius:8px;padding:10px 14px">
-                <p style="font-size:12px;color:#2dd4bf;line-height:1.5">💡 ${tip}</p>
+            <div style="margin-top:12px;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);border-radius:8px;padding:10px 14px">
+                <p style="font-size:12px;color:#06b6d4;line-height:1.5">💡 ${tip}</p>
             </div>
         </div>
 
@@ -231,9 +231,9 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
         <div class="section">
             <h3 style="font-size:16px;font-weight:600;color:#e5e7eb;margin-bottom:12px">🎯 Dominant vs. Secondary Emotion</h3>
             <div style="display:flex;gap:12px;margin-bottom:10px">
-                <div style="flex:1;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15);border-radius:10px;padding:14px;text-align:center">
+                <div style="flex:1;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);border-radius:10px;padding:14px;text-align:center">
                     <div style="font-size:28px">${getEmoji(dominant.dominant.emotion)}</div>
-                    <div style="font-weight:600;color:#2dd4bf;text-transform:capitalize;margin-top:4px">${dominant.dominant.emotion}</div>
+                    <div style="font-weight:600;color:#06b6d4;text-transform:capitalize;margin-top:4px">${dominant.dominant.emotion}</div>
                     <div style="font-size:13px;color:#9ca3af">${(dominant.dominant.probability * 100).toFixed(1)}%</div>
                 </div>
                 <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;text-align:center">
@@ -288,13 +288,13 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
 
         <!-- Disclaimer -->
         <div style="text-align:center;padding:20px;margin-top:8px">
-            <p style="font-size:11px;color:#52525b;line-height:1.6;max-width:500px;margin:0 auto">⚠️ ${DISCLAIMER_TEXT}</p>
+            <p style="font-size:11px;color:#404040;line-height:1.6;max-width:500px;margin:0 auto">⚠️ ${DISCLAIMER_TEXT}</p>
         </div>
 
         <!-- Footer -->
         <div style="text-align:center;padding:16px;border-top:1px solid rgba(255,255,255,0.05);margin-top:8px">
-            <div style="font-size:13px;font-weight:700;color:#92816a">AEMER</div>
-            <div style="font-size:10px;color:#52525b;margin-top:2px">Accent-Aware Emotion Recognition • Generated ${dateStr}</div>
+            <div style="font-size:13px;font-weight:700;color:#525252">AEMER</div>
+            <div style="font-size:10px;color:#404040;margin-top:2px">Accent-Aware Emotion Recognition • Generated ${dateStr}</div>
         </div>
     </div>
 </body>
@@ -350,7 +350,7 @@ export function generateSummaryReportHTML(
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1c1917 0%, #292524 50%, #1c1917 100%);
+            background: linear-gradient(135deg, #050505 0%, #0a0a0a 50%, #050505 100%);
             color: #d4d4d8;
             min-height: 100vh;
             padding: 40px 20px;
@@ -366,7 +366,7 @@ export function generateSummaryReportHTML(
         table { width: 100%; border-collapse: collapse; }
         tr:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.04); }
         @media print {
-            body { background: #1c1917; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { background: #050505; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -374,16 +374,16 @@ export function generateSummaryReportHTML(
     <div class="container">
         <!-- Header -->
         <div style="text-align:center;margin-bottom:28px">
-            <div style="font-size:28px;font-weight:800;color:#fef3c7;letter-spacing:-0.02em">AEMER</div>
-            <div style="font-size:12px;color:#92816a;margin-top:2px">Accent-Aware Emotion Recognition</div>
+            <div style="font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.02em">AEMER</div>
+            <div style="font-size:12px;color:#525252;margin-top:2px">Accent-Aware Emotion Recognition</div>
             <div style="font-size:20px;font-weight:700;color:#e5e7eb;margin-top:12px">Analytics Report</div>
             <div style="font-size:12px;color:#6b7280;margin-top:4px">Generated on ${dateStr}</div>
         </div>
 
         <!-- Overview Cards -->
         <div style="display:flex;gap:12px;margin-bottom:16px">
-            <div style="flex:1;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.15);border-radius:12px;padding:16px;text-align:center">
-                <div style="font-size:28px;font-weight:800;color:#2dd4bf">${totalAnalyses}</div>
+            <div style="flex:1;background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.15);border-radius:12px;padding:16px;text-align:center">
+                <div style="font-size:28px;font-weight:800;color:#06b6d4">${totalAnalyses}</div>
                 <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-top:2px">Total Analyses</div>
             </div>
             ${topEmotion ? `
@@ -424,13 +424,13 @@ export function generateSummaryReportHTML(
 
         <!-- Disclaimer -->
         <div style="text-align:center;padding:20px;margin-top:8px">
-            <p style="font-size:11px;color:#52525b;line-height:1.6;max-width:500px;margin:0 auto">⚠️ ${DISCLAIMER_TEXT}</p>
+            <p style="font-size:11px;color:#404040;line-height:1.6;max-width:500px;margin:0 auto">⚠️ ${DISCLAIMER_TEXT}</p>
         </div>
 
         <!-- Footer -->
         <div style="text-align:center;padding:16px;border-top:1px solid rgba(255,255,255,0.05);margin-top:8px">
-            <div style="font-size:13px;font-weight:700;color:#92816a">AEMER</div>
-            <div style="font-size:10px;color:#52525b;margin-top:2px">Accent-Aware Emotion Recognition • Generated ${dateStr}</div>
+            <div style="font-size:13px;font-weight:700;color:#525252">AEMER</div>
+            <div style="font-size:10px;color:#404040;margin-top:2px">Accent-Aware Emotion Recognition • Generated ${dateStr}</div>
         </div>
     </div>
 </body>

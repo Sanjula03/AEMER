@@ -47,7 +47,7 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
 
     const getEmotionColor = (emotion: string) => {
         const colors: Record<string, string> = {
-            happy: 'from-yellow-400 to-orange-500',
+            happy: 'from-yellow-400 to-cyan-400',
             sad: 'from-blue-400 to-blue-600',
             angry: 'from-red-400 to-red-600',
             neutral: 'from-gray-400 to-gray-600',

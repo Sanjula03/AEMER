@@ -79,8 +79,8 @@ export function RadarChart({ data, size = 280 }: RadarChartProps) {
                         <polygon
                             key={i}
                             points={ringPoints}
-                            fill={i % 2 === 0 ? 'rgba(180, 130, 60, 0.08)' : 'rgba(180, 130, 60, 0.04)'}
-                            stroke="rgba(180, 130, 60, 0.2)"
+                            fill={i % 2 === 0 ? 'rgba(6, 182, 212, 0.06)' : 'rgba(6, 182, 212, 0.02)'}
+                            stroke="rgba(6, 182, 212, 0.12)"
                             strokeWidth="0.5"
                         />
                     );
@@ -94,7 +94,7 @@ export function RadarChart({ data, size = 280 }: RadarChartProps) {
                         y1={cy}
                         x2={a.x}
                         y2={a.y}
-                        stroke="rgba(180, 130, 60, 0.25)"
+                        stroke="rgba(6, 182, 212, 0.15)"
                         strokeWidth="0.8"
                     />
                 ))}
@@ -102,8 +102,8 @@ export function RadarChart({ data, size = 280 }: RadarChartProps) {
                 {/* Data polygon fill */}
                 <polygon
                     points={dataPolygon}
-                    fill="rgba(20, 184, 166, 0.25)"
-                    stroke="rgba(20, 184, 166, 0.8)"
+                    fill="rgba(6, 182, 212, 0.2)"
+                    stroke="rgba(6, 182, 212, 0.7)"
                     strokeWidth="2"
                 />
 
@@ -128,7 +128,7 @@ export function RadarChart({ data, size = 280 }: RadarChartProps) {
                         y={a.labelY}
                         textAnchor="middle"
                         dominantBaseline="central"
-                        fill="rgba(253, 230, 138, 0.8)"
+                        fill="rgba(255, 255, 255, 0.85)"
                         fontSize="11"
                         fontWeight="500"
                         fontFamily="system-ui, sans-serif"
@@ -144,7 +144,7 @@ export function RadarChart({ data, size = 280 }: RadarChartProps) {
                         key={`ring-label-${ring}`}
                         x={cx + 4}
                         y={cy - radius * ring + 2}
-                        fill="rgba(253, 230, 138, 0.4)"
+                        fill="rgba(255, 255, 255, 0.3)"
                         fontSize="8"
                         textAnchor="start"
                         fontFamily="system-ui, sans-serif"

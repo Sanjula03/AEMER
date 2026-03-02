@@ -107,7 +107,7 @@ export function EmotionGauge({ value, label, size = 220 }: EmotionGaugeProps) {
                         y1={tick.y1}
                         x2={tick.x2}
                         y2={tick.y2}
-                        stroke={tick.isMajor ? 'rgba(253,230,138,0.35)' : 'rgba(253,230,138,0.15)'}
+                        stroke={tick.isMajor ? 'rgba(6,182,212,0.3)' : 'rgba(6,182,212,0.1)'}
                         strokeWidth={tick.isMajor ? 2 : 1}
                         strokeLinecap="round"
                     />
@@ -117,7 +117,7 @@ export function EmotionGauge({ value, label, size = 220 }: EmotionGaugeProps) {
                 <path
                     d={bgPath}
                     fill="none"
-                    stroke="rgba(120, 90, 40, 0.15)"
+                    stroke="rgba(6, 182, 212, 0.1)"
                     strokeWidth={strokeWidth}
                     strokeLinecap="round"
                 />

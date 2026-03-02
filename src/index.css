@@ -3,146 +3,175 @@
 @tailwind utilities;
 
 /* ========================================
-   AEMER Modern UI Styles
+   AEMER — Arctic Cyan Design System
+   White / Cyan / Black
    ======================================== */
 
 :root {
-    /* Primary Gradient Colors */
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    --gradient-cool: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-    --gradient-dark: linear-gradient(135deg, #434343 0%, #000000 100%);
+    /* Core Colors */
+    --bg-primary: #050505;
+    --bg-secondary: #0a0a0a;
+    --bg-surface: #111111;
+    --bg-elevated: #171717;
+    --bg-hover: #1f1f1f;
 
-    /* Emotion Colors */
-    --happy-gradient: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-    --sad-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --angry-gradient: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-    --neutral-gradient: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+    --cyan-500: #06b6d4;
+    --cyan-400: #22d3ee;
+    --cyan-300: #67e8f9;
+    --cyan-200: #a5f3fc;
+    --cyan-glow: rgba(6, 182, 212, 0.4);
+
+    --text-primary: #ffffff;
+    --text-secondary: #a3a3a3;
+    --text-muted: #525252;
+    --border-default: rgba(6, 182, 212, 0.12);
+    --border-strong: rgba(6, 182, 212, 0.25);
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    --gradient-accent: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+    --gradient-hero: linear-gradient(135deg, #06b6d4 0%, #0e7490 50%, #164e63 100%);
+    --gradient-surface: linear-gradient(135deg, #111111 0%, #0a0a0a 100%);
 }
 
-/* Body Background */
+/* Body */
 body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: #050505;
+    color: #f5f5f5;
     min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Animated Background */
-@keyframes gradientShift {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
-.animated-bg {
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-}
-
-/* Glassmorphism Effect */
+/* ── Glassmorphism ── */
 .glass {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    background: rgba(17, 17, 17, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(6, 182, 212, 0.1);
 }
 
-.glass-dark {
-    background: rgba(17, 25, 40, 0.75);
-    backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.125);
+.glass-strong {
+    background: rgba(17, 17, 17, 0.85);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(6, 182, 212, 0.15);
 }
 
-/* Modern Card Styles */
+/* ── Modern Card ── */
 .card-modern {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+    background: #111111;
+    border: 1px solid rgba(6, 182, 212, 0.1);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .card-modern:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+    border-color: rgba(6, 182, 212, 0.3);
+    box-shadow: 0 0 30px rgba(6, 182, 212, 0.08);
+    transform: translateY(-2px);
 }
 
-/* Gradient Buttons */
+/* ── Glow Card ── */
+.card-glow {
+    position: relative;
+    background: #111111;
+    border: 1px solid rgba(6, 182, 212, 0.12);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+.card-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.card-glow:hover::before {
+    opacity: 1;
+}
+
+.card-glow:hover {
+    border-color: rgba(6, 182, 212, 0.25);
+    box-shadow: 0 8px 40px rgba(6, 182, 212, 0.1), 0 0 0 1px rgba(6, 182, 212, 0.05);
+}
+
+/* ── Gradient Buttons ── */
 .btn-gradient {
-    background: var(--gradient-primary);
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 12px 28px;
     border-radius: 12px;
     font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-gradient:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 8px 30px rgba(6, 182, 212, 0.45);
 }
 
-.btn-gradient-secondary {
-    background: var(--gradient-secondary);
-    box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+.btn-gradient:active {
+    transform: translateY(0);
 }
 
-.btn-gradient-success {
-    background: var(--gradient-success);
-    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+/* ── Animations ── */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Floating Animation */
-@keyframes float {
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes glow-pulse {
 
     0%,
     100% {
-        transform: translateY(0px);
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
     }
 
     50% {
-        transform: translateY(-10px);
+        box-shadow: 0 0 40px rgba(6, 182, 212, 0.3);
     }
 }
 
-.float-animation {
-    animation: float 3s ease-in-out infinite;
-}
-
-/* Pulse Animation */
-@keyframes pulse-ring {
-    0% {
-        transform: scale(0.95);
-        opacity: 0.7;
-    }
-
-    100% {
-        transform: scale(1.1);
-        opacity: 0;
-    }
-}
-
-.pulse-animation::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: inherit;
-    animation: pulse-ring 1.5s ease-out infinite;
-}
-
-/* Shimmer Effect */
 @keyframes shimmer {
     0% {
         background-position: -200% 0;
@@ -153,87 +182,134 @@ body {
     }
 }
 
-.shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
-/* Gradient Text */
-.text-gradient {
-    background: var(--gradient-primary);
+@keyframes border-glow {
+
+    0%,
+    100% {
+        border-color: rgba(6, 182, 212, 0.15);
+    }
+
+    50% {
+        border-color: rgba(6, 182, 212, 0.35);
+    }
+}
+
+@keyframes typing-cursor {
+
+    0%,
+    100% {
+        border-color: #06b6d4;
+    }
+
+    50% {
+        border-color: transparent;
+    }
+}
+
+/* Utility animation classes */
+.animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+    animation: scale-in 0.4s ease-out forwards;
+}
+
+.animate-glow-pulse {
+    animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-float {
+    animation: float 4s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.delay-100 {
+    animation-delay: 100ms;
+}
+
+.delay-200 {
+    animation-delay: 200ms;
+}
+
+.delay-300 {
+    animation-delay: 300ms;
+}
+
+.delay-400 {
+    animation-delay: 400ms;
+}
+
+.delay-500 {
+    animation-delay: 500ms;
+}
+
+/* ── Gradient Text ── */
+.text-gradient-cyan {
+    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
-.text-gradient-warm {
-    background: var(--gradient-warm);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Emotion Cards */
-.emotion-happy {
-    background: var(--happy-gradient);
-}
-
-.emotion-sad {
-    background: var(--sad-gradient);
-}
-
-.emotion-angry {
-    background: var(--angry-gradient);
-}
-
-.emotion-neutral {
-    background: var(--neutral-gradient);
-}
-
-/* Input Styles */
-.input-modern {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid transparent;
-    border-radius: 12px;
-    padding: 14px 18px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-.input-modern:focus {
-    border-color: #667eea;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25);
-    outline: none;
-}
-
-/* Progress Bar */
-.progress-gradient {
-    background: var(--gradient-primary);
-    border-radius: 999px;
-    transition: width 0.5s ease;
-}
-
-/* Scrollbar Styling */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
+    background: #0a0a0a;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(6, 182, 212, 0.3);
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    background: rgba(6, 182, 212, 0.5);
 }
 
-/* Safe Areas */
+/* ── Progress Bar ── */
+.progress-gradient {
+    background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+/* ── Input Styles ── */
+.input-modern {
+    background: #111111;
+    border: 1px solid rgba(6, 182, 212, 0.12);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #f5f5f5;
+    transition: all 0.3s ease;
+}
+
+.input-modern:focus {
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+    outline: none;
+}
+
+/* ── Safe Areas ── */
 @layer utilities {
     .pt-safe {
         padding-top: env(safe-area-inset-top);
@@ -244,10 +320,12 @@ body {
     }
 }
 
-/* Responsive Adjustments */
+/* ── Responsive ── */
 @media (max-width: 768px) {
-    .card-modern {
-        border-radius: 16px;
+
+    .card-modern,
+    .card-glow {
+        border-radius: 12px;
     }
 
     .btn-gradient {
