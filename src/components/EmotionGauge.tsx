@@ -91,11 +91,11 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
 
                 <text
                     x={cx}
-                    y={cy - 8}
+                    y={cy - 6}
                     textAnchor="middle"
-                    fill="#fef3c7"
-                    fontSize={size * 0.16}
-                    fontWeight="bold"
+                    fill="#ffffff"
+                    fontSize={size * 0.18}
+                    fontWeight="800"
                     fontFamily="system-ui, sans-serif"
                 >
                     {percentage}%
@@ -105,10 +105,11 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
                 {label && (
                     <text
                         x={cx}
-                        y={cy + size * 0.1}
+                        y={cy + size * 0.12}
                         textAnchor="middle"
-                        fill="rgba(253, 230, 138, 0.6)"
-                        fontSize={size * 0.065}
+                        fill="#d4d4d4"
+                        fontSize={size * 0.07}
+                        fontWeight="600"
                         fontFamily="system-ui, sans-serif"
                     >
                         {label}
