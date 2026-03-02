@@ -102,7 +102,10 @@ export function Results() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-neutral-400">Loading results...</div>
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#06b6d4', borderTopColor: 'transparent' }} />
+          <span style={{ color: '#737373' }}>Loading results...</span>
+        </div>
       </div>
     );
   }
@@ -139,7 +142,7 @@ export function Results() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-fade-in-up">
         <div>
           <h2 className="text-3xl font-bold text-white mb-2">Analysis Report</h2>
           <p className="text-neutral-400">
@@ -158,7 +161,7 @@ export function Results() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ═══ LEFT SIDEBAR — Analysis list ═══ */}
-        <div className="lg:col-span-1 bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-4 max-h-[700px] overflow-y-auto">
+        <div className="lg:col-span-1 bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-4 max-h-[700px] overflow-y-auto animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
           <h3 className="font-semibold text-white mb-3">Recent Analyses</h3>
           <div className="space-y-2">
             {analyses.map((analysis) => (
@@ -204,7 +207,7 @@ export function Results() {
           {sel && (
             <>
               {/* ─── 1. EMOTION HEADER ─── */}
-              <div className={`bg-gradient-to-r ${getEmotionGradient(sel.emotion_label)} rounded-xl p-6 text-white shadow-lg`}>
+              <div className={`bg-gradient-to-r ${getEmotionGradient(sel.emotion_label)} rounded-xl p-6 text-white shadow-lg animate-fade-in-up`} style={{ animationDelay: '150ms', animationFillMode: 'backwards' }}>
                 <div className="flex items-center space-x-4">
                   <div className="text-6xl">{getEmotionEmoji(sel.emotion_label)}</div>
                   <div className="flex-1">
@@ -238,7 +241,7 @@ export function Results() {
               )}
 
               {/* ─── 2. MENTAL STATE SUMMARY ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-6">
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-6 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
                 <h4 className="font-semibold text-white mb-3 flex items-center space-x-2">
                   <Brain className="w-5 h-5 text-cyan-400" />
                   <span>Mental State Summary</span>
@@ -252,7 +255,7 @@ export function Results() {
               </div>
 
               {/* ─── 3. CONFIDENCE GAUGE + VALENCE/AROUSAL ─── */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'backwards' }}>
                 {/* Confidence Gauge */}
                 <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
                   <h4 className="font-semibold text-white mb-2 text-center flex items-center justify-center space-x-2">
@@ -310,7 +313,7 @@ export function Results() {
 
               {/* ─── 4. DOMINANT vs SECONDARY EMOTION ─── */}
               {dominantSecondary && (
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
                   <h4 className="font-semibold text-white mb-3">Dominant vs. Secondary Emotion</h4>
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div className="bg-cyan-900/20 border border-cyan-700/30 rounded-lg p-3 text-center">
@@ -330,7 +333,7 @@ export function Results() {
 
               {/* ─── 5. RADAR CHART ─── */}
               {sel.all_probabilities && Object.keys(sel.all_probabilities).length > 2 && (
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '350ms', animationFillMode: 'backwards' }}>
                   <h4 className="font-semibold text-white mb-3 text-center">Emotion Distribution</h4>
                   <RadarChart data={sel.all_probabilities} size={280} />
                   {/* Probability list below radar */}
@@ -358,7 +361,7 @@ export function Results() {
 
               {/* ─── 6. MODALITY BREAKDOWN ─── */}
               {sel.modalities_used && sel.modalities_used.length > 1 && (
-                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+                <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '400ms', animationFillMode: 'backwards' }}>
                   <h4 className="font-semibold text-white mb-1 flex items-center space-x-2">
                     <Globe className="w-4 h-4 text-cyan-400" />
                     <span>Modality Breakdown</span>
@@ -419,7 +422,7 @@ export function Results() {
               )}
 
               {/* ─── 7. MENTAL HEALTH CONTEXT & COPING STRATEGIES ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '450ms', animationFillMode: 'backwards' }}>
                 <h4 className="font-semibold text-white mb-4 flex items-center space-x-2">
                   <Heart className="w-5 h-5 text-pink-400" />
                   <span>Mental Health Context &amp; Recommendations</span>
@@ -467,13 +470,13 @@ export function Results() {
               </div>
 
               {/* ─── 8. DISCLAIMER ─── */}
-              <div className="flex items-start space-x-3 bg-neutral-900/30 border border-neutral-800/30 rounded-xl p-4">
+              <div className="flex items-start space-x-3 bg-neutral-900/30 border border-neutral-800/30 rounded-xl p-4 animate-fade-in-up" style={{ animationDelay: '500ms', animationFillMode: 'backwards' }}>
                 <Shield className="w-5 h-5 text-neutral-600 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-neutral-600 leading-relaxed">{DISCLAIMER_TEXT}</p>
               </div>
 
               {/* ─── 9. METADATA (Collapsible) ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl overflow-hidden">
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl overflow-hidden animate-fade-in-up" style={{ animationDelay: '550ms', animationFillMode: 'backwards' }}>
                 <button
                   onClick={() => setShowMetadata(!showMetadata)}
                   className="w-full flex items-center justify-between p-4 hover:bg-neutral-800/20 transition-colors"
@@ -523,7 +526,7 @@ export function Results() {
               </div>
 
               {/* ─── 10. DOWNLOAD REPORT ─── */}
-              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5">
+              <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: '600ms', animationFillMode: 'backwards' }}>
                 <h4 className="font-semibold text-white mb-3 flex items-center space-x-2">
                   <Download className="w-4 h-4 text-cyan-400" />
                   <span>Export Report</span>

@@ -85,14 +85,17 @@ export function Reports() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-neutral-400">Loading reports...</div>
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#06b6d4', borderTopColor: 'transparent' }} />
+          <span style={{ color: '#737373' }}>Loading reports...</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-fade-in-up">
         <div>
           <h2 className="text-3xl font-bold text-white mb-2">Reports</h2>
           <p className="text-neutral-400">
@@ -119,7 +122,7 @@ export function Reports() {
       </div>
 
       {emotionStats.length === 0 ? (
-        <div className="text-center py-12 bg-neutral-900/50 border border-cyan-900/20 rounded-xl">
+        <div className="text-center py-12 bg-neutral-900/50 border border-cyan-900/20 rounded-xl animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
           <div className="text-6xl mb-4">📈</div>
           <h3 className="text-xl font-semibold text-white mb-2">No Data Yet</h3>
           <p className="text-neutral-500">Analyze some audio files to see your emotion trends here.</p>
@@ -127,7 +130,7 @@ export function Reports() {
       ) : (
         <div className="space-y-6">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
             <div className="bg-gradient-to-br from-cyan-600 to-cyan-600 rounded-xl p-6 shadow-lg shadow-cyan-800/30">
               <BarChart3 className="w-8 h-8 text-white/80 mb-2" />
               <div className="text-3xl font-bold text-white">{totalAnalyses}</div>
@@ -156,7 +159,7 @@ export function Reports() {
           </div>
 
           {/* Emotion Distribution */}
-          <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-6">
+          <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-6 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
             <h3 className="text-lg font-semibold text-white mb-4">
               Emotion Distribution
             </h3>
@@ -199,7 +202,7 @@ export function Reports() {
           </div>
 
           {/* Key Insights */}
-          <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-4">
+          <div className="bg-neutral-900/50 border border-cyan-900/20 rounded-xl p-4 animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
             <h4 className="font-medium text-white mb-2">📊 Key Insights</h4>
             <ul className="text-sm text-neutral-300 space-y-1">
               <li>
