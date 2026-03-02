@@ -1,4 +1,4 @@
-import { Activity, Sparkles } from 'lucide-react';
+import { Activity, Sparkles, LayoutDashboard, Mic, FileBarChart, PieChart } from 'lucide-react';
 import { ReactNode, useEffect, useRef } from 'react';
 
 interface LayoutProps {
@@ -103,10 +103,10 @@ function ParticleBackground() {
 
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', emoji: '📊' },
-    { id: 'analyze', label: 'Analyze', emoji: '🎤' },
-    { id: 'results', label: 'Results', emoji: '📋' },
-    { id: 'reports', label: 'Reports', emoji: '📈' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'analyze', label: 'Analyze', icon: Mic },
+    { id: 'results', label: 'Results', icon: FileBarChart },
+    { id: 'reports', label: 'Reports', icon: PieChart },
   ];
 
   return (
@@ -126,100 +126,109 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         />
       </div>
 
-      {/* Header */}
+      {/* ═══ Unified Header + Navigation ═══ */}
       <header
-        className="relative sticky top-0 z-50 pt-safe"
+        className="relative sticky top-0 z-50"
         style={{
-          background: 'rgba(5, 5, 5, 0.8)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          borderBottom: '1px solid rgba(6, 182, 212, 0.08)',
+          background: 'rgba(5, 5, 5, 0.75)',
+          backdropFilter: 'blur(24px) saturate(200%)',
+          borderBottom: '1px solid rgba(6, 182, 212, 0.06)',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
+            {/* Logo */}
             <div className="flex items-center space-x-3">
               <div
-                className="p-2.5 rounded-xl shadow-lg"
+                className="p-2 rounded-xl"
                 style={{
                   background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
-                  boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)',
+                  boxShadow: '0 4px 15px rgba(6, 182, 212, 0.25)',
                 }}
               >
                 <Activity className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                <h1 className="text-lg font-bold text-white flex items-center gap-1.5" style={{ letterSpacing: '-0.02em' }}>
                   AEMER
-                  <Sparkles className="w-4 h-4" style={{ color: '#22d3ee' }} />
+                  <Sparkles className="w-3.5 h-3.5" style={{ color: '#22d3ee' }} />
                 </h1>
-                <p className="text-xs" style={{ color: '#525252' }}>
+                <p style={{ color: '#404040', fontSize: '11px', letterSpacing: '0.04em' }}>
                   Emotion Recognition AI
                 </p>
               </div>
             </div>
 
+            {/* ── Nav Pills ── */}
+            <nav className="flex items-center">
+              <div
+                className="flex items-center rounded-2xl p-1"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.04)' }}
+              >
+                {navItems.map((item) => {
+                  const isActive = currentPage === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className="relative px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                      style={
+                        isActive
+                          ? {
+                            background: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.08))',
+                            color: '#22d3ee',
+                            boxShadow: '0 0 20px rgba(6,182,212,0.1)',
+                            border: '1px solid rgba(6,182,212,0.15)',
+                          }
+                          : {
+                            color: '#525252',
+                            background: 'transparent',
+                            border: '1px solid transparent',
+                          }
+                      }
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.color = '#a3a3a3';
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.color = '#525252';
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span style={{ letterSpacing: '-0.01em' }}>{item.label}</span>
+                      {/* Active glow dot */}
+                      {isActive && (
+                        <div
+                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                          style={{ background: '#06b6d4', boxShadow: '0 0 6px #06b6d4' }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+
+            {/* Live Badge */}
             <div
-              className="flex items-center space-x-2 rounded-full px-4 py-2"
+              className="flex items-center space-x-2 rounded-full px-3.5 py-1.5"
               style={{
-                background: 'linear-gradient(135deg, #059669, #10b981)',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+                background: 'rgba(16, 185, 129, 0.08)',
+                border: '1px solid rgba(16, 185, 129, 0.15)',
               }}
             >
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              <span className="text-xs text-white font-medium">Live on Cloud</span>
+              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+              <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 500 }}>Live on Cloud</span>
             </div>
           </div>
         </div>
       </header>
-
-      {/* Navigation */}
-      <nav
-        className="relative z-40"
-        style={{
-          background: 'rgba(5, 5, 5, 0.6)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(6, 182, 212, 0.06)',
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1.5 py-3">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className="px-5 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2"
-                style={
-                  currentPage === item.id
-                    ? {
-                      background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
-                      color: '#fff',
-                      boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)',
-                    }
-                    : {
-                      color: '#737373',
-                      background: 'transparent',
-                    }
-                }
-                onMouseEnter={(e) => {
-                  if (currentPage !== item.id) {
-                    e.currentTarget.style.color = '#d4d4d4';
-                    e.currentTarget.style.background = 'rgba(6, 182, 212, 0.06)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (currentPage !== item.id) {
-                    e.currentTarget.style.color = '#737373';
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
-              >
-                <span>{item.emoji}</span>
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
