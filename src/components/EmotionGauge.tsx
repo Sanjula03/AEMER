@@ -1,7 +1,9 @@
 /**
  * EmotionGauge — Modern SVG semi-circular gauge with gradient arc,
- * glow effects, tick marks, and HTML text overlay for guaranteed readability.
+ * glow effects, tick marks, animated needle sweep, and HTML text overlay.
  */
+
+import { useEffect, useRef, useState } from 'react';
 
 interface EmotionGaugeProps {
     value: number; // 0 to 1
@@ -10,7 +12,44 @@ interface EmotionGaugeProps {
 }
 
 export function EmotionGauge({ value, label, size = 220 }: EmotionGaugeProps) {
-    const clampedValue = Math.min(Math.max(value, 0), 1);
+    const targetValue = Math.min(Math.max(value, 0), 1);
+
+    // ── Animated value (sweeps from 0 → target) ──
+    const [animatedValue, setAnimatedValue] = useState(0);
+    const animRef = useRef<number | null>(null);
+    const prevTarget = useRef(0);
+
+    useEffect(() => {
+        const from = prevTarget.current;
+        const to = targetValue;
+        prevTarget.current = to;
+
+        if (from === to) {
+            setAnimatedValue(to);
+            return;
+        }
+
+        const duration = 1200; // ms
+        const startTime = performance.now();
+
+        const animate = (now: number) => {
+            const elapsed = now - startTime;
+            const t = Math.min(elapsed / duration, 1);
+            // easeOutExpo for a satisfying sweep
+            const ease = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            setAnimatedValue(from + (to - from) * ease);
+            if (t < 1) {
+                animRef.current = requestAnimationFrame(animate);
+            }
+        };
+
+        animRef.current = requestAnimationFrame(animate);
+        return () => {
+            if (animRef.current) cancelAnimationFrame(animRef.current);
+        };
+    }, [targetValue]);
+
+    const clampedValue = animatedValue;
     const percentage = Math.round(clampedValue * 100);
 
     const cx = size / 2;
@@ -69,8 +108,8 @@ export function EmotionGauge({ value, label, size = 220 }: EmotionGaugeProps) {
     const needleY = cy - needleLength * Math.sin(needleAngle);
 
     const svgHeight = size * 0.62;
-    const gradientId = `gauge-grad-${percentage}`;
-    const glowId = `gauge-glow-${percentage}`;
+    const gradientId = `gauge-grad-${Math.round(targetValue * 100)}`;
+    const glowId = `gauge-glow-${Math.round(targetValue * 100)}`;
 
     return (
         <div style={{ position: 'relative', width: size, margin: '0 auto' }}>
@@ -131,7 +170,6 @@ export function EmotionGauge({ value, label, size = 220 }: EmotionGaugeProps) {
                         strokeWidth={strokeWidth}
                         strokeLinecap="round"
                         filter={`url(#${glowId})`}
-                        style={{ transition: 'all 0.6s ease-out' }}
                     />
                 )}
 
@@ -149,7 +187,6 @@ export function EmotionGauge({ value, label, size = 220 }: EmotionGaugeProps) {
                     strokeLinecap="round"
                     style={{
                         filter: `drop-shadow(0 0 4px ${colors.glow})`,
-                        transition: 'all 0.6s ease-out',
                     }}
                 />
 
@@ -161,7 +198,6 @@ export function EmotionGauge({ value, label, size = 220 }: EmotionGaugeProps) {
                     fill={colors.main}
                     style={{
                         filter: `drop-shadow(0 0 6px ${colors.glow})`,
-                        transition: 'all 0.6s ease-out',
                     }}
                 />
             </svg>
