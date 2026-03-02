@@ -12,10 +12,12 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
     const clampedValue = Math.min(Math.max(value, 0), 1);
     const percentage = Math.round(clampedValue * 100);
 
-    // SVG arc calculations
-    const cx = size / 2;
-    const cy = size * 0.6;
-    const radius = size * 0.4;
+    // SVG dimensions — extra height for text below the arc
+    const svgWidth = size;
+    const svgHeight = size * 0.78;
+    const cx = svgWidth / 2;
+    const cy = svgHeight * 0.55;
+    const radius = size * 0.36;
     const strokeWidth = 14;
 
     // Arc from 180° to 0° (left to right semicircle)
@@ -54,17 +56,7 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
 
     return (
         <div className="flex flex-col items-center">
-            <svg width={size} height={size * 0.7} viewBox={`0 0 ${size} ${size * 0.7}`}>
-                {/* Gradient definition */}
-                <defs>
-                    <linearGradient id={`gauge-gradient-${percentage}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#f87171" />
-                        <stop offset="33%" stopColor="#fb923c" />
-                        <stop offset="66%" stopColor="#facc15" />
-                        <stop offset="100%" stopColor="#4ade80" />
-                    </linearGradient>
-                </defs>
-
+            <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
                 {/* Background arc */}
                 <path
                     d={bgPath}
@@ -89,28 +81,39 @@ export function EmotionGauge({ value, label, size = 200 }: EmotionGaugeProps) {
                     />
                 )}
 
+                {/* Dark backing circle behind text for contrast */}
+                <circle
+                    cx={cx}
+                    cy={cy - 2}
+                    r={radius * 0.55}
+                    fill="rgba(28, 25, 23, 0.6)"
+                />
+
+                {/* Percentage text */}
                 <text
                     x={cx}
-                    y={cy - 6}
+                    y={cy - 2}
                     textAnchor="middle"
+                    dominantBaseline="central"
                     fill="#ffffff"
                     fontSize={size * 0.18}
                     fontWeight="800"
-                    fontFamily="system-ui, sans-serif"
+                    fontFamily="system-ui, -apple-system, sans-serif"
                 >
                     {percentage}%
                 </text>
 
-                {/* Label */}
+                {/* Label below the arc */}
                 {label && (
                     <text
                         x={cx}
-                        y={cy + size * 0.12}
+                        y={cy + radius * 0.42}
                         textAnchor="middle"
-                        fill="#d4d4d4"
+                        dominantBaseline="central"
+                        fill="#e5e5e5"
                         fontSize={size * 0.07}
                         fontWeight="600"
-                        fontFamily="system-ui, sans-serif"
+                        fontFamily="system-ui, -apple-system, sans-serif"
                     >
                         {label}
                     </text>
