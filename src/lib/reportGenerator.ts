@@ -439,43 +439,48 @@ export function generateSummaryReportHTML(
 
 /** Download HTML report as a PDF file using html2pdf.js */
 export async function downloadPDF(html: string, filename: string) {
-    // Create a hidden container to render the HTML
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '700px';
-    container.innerHTML = html;
+    // Use an iframe to render the full HTML document with all styles intact
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.left = '-9999px';
+    iframe.style.top = '0';
+    iframe.style.width = '800px';
+    iframe.style.height = '1200px';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
 
-    // Extract just the body content if it's a full HTML document
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/);
-    if (bodyMatch) {
-        container.innerHTML = bodyMatch[1];
+    // Write the full HTML into the iframe so <style> blocks in <head> work
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) {
+        document.body.removeChild(iframe);
+        return;
     }
 
-    // Apply the dark background styles inline
-    container.style.background = '#050505';
-    container.style.color = '#d4d4d8';
-    container.style.fontFamily = "'Segoe UI', system-ui, -apple-system, sans-serif";
-    container.style.padding = '40px 20px';
+    iframeDoc.open();
+    iframeDoc.write(html);
+    iframeDoc.close();
 
-    document.body.appendChild(container);
+    // Wait for content to render
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const contentEl = iframeDoc.body;
 
     // Dynamically import html2pdf.js
     const html2pdf = (await import('html2pdf.js')).default;
 
-    const pdfFilename = filename.replace(/\.html$/i, '.pdf');
+    const pdfFilename = filename.replace(/\.html$/i, '').replace(/\.pdf$/i, '') + '.pdf';
 
     await html2pdf()
         .set({
-            margin: 0,
+            margin: [10, 10, 10, 10],
             filename: pdfFilename,
-            image: { type: 'jpeg', quality: 0.98 },
+            image: { type: 'jpeg', quality: 0.95 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
                 backgroundColor: '#050505',
                 logging: false,
+                windowWidth: 800,
             },
             jsPDF: {
                 unit: 'mm',
@@ -484,11 +489,11 @@ export async function downloadPDF(html: string, filename: string) {
             },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         } as any)
-        .from(container)
+        .from(contentEl)
         .save();
 
     // Clean up
-    document.body.removeChild(container);
+    document.body.removeChild(iframe);
 }
 
 /** @deprecated Use downloadPDF instead */
