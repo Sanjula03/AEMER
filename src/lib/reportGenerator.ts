@@ -437,13 +437,61 @@ export function generateSummaryReportHTML(
 </html>`;
 }
 
-/** Download HTML string as a file */
+/** Download HTML report as a PDF file using html2pdf.js */
+export async function downloadPDF(html: string, filename: string) {
+    // Create a hidden container to render the HTML
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '700px';
+    container.innerHTML = html;
+
+    // Extract just the body content if it's a full HTML document
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/);
+    if (bodyMatch) {
+        container.innerHTML = bodyMatch[1];
+    }
+
+    // Apply the dark background styles inline
+    container.style.background = '#050505';
+    container.style.color = '#d4d4d8';
+    container.style.fontFamily = "'Segoe UI', system-ui, -apple-system, sans-serif";
+    container.style.padding = '40px 20px';
+
+    document.body.appendChild(container);
+
+    // Dynamically import html2pdf.js
+    const html2pdf = (await import('html2pdf.js')).default;
+
+    const pdfFilename = filename.replace(/\.html$/i, '.pdf');
+
+    await html2pdf()
+        .set({
+            margin: 0,
+            filename: pdfFilename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#050505',
+                logging: false,
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'portrait',
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        } as any)
+        .from(container)
+        .save();
+
+    // Clean up
+    document.body.removeChild(container);
+}
+
+/** @deprecated Use downloadPDF instead */
 export function downloadHTML(html: string, filename: string) {
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadPDF(html, filename);
 }

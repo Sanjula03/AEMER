@@ -21,7 +21,7 @@ import {
   getModalityAgreement,
   DISCLAIMER_TEXT,
 } from '../lib/emotionInsights';
-import { generateSingleReportHTML, downloadHTML } from '../lib/reportGenerator';
+import { generateSingleReportHTML, downloadPDF } from '../lib/reportGenerator';
 
 
 
@@ -84,7 +84,7 @@ export function Results() {
   const handleDownloadReport = () => {
     if (!selectedAnalysis) return;
     const html = generateSingleReportHTML(selectedAnalysis);
-    downloadHTML(html, `AEMER-Report-${selectedAnalysis.id.slice(0, 8)}.html`);
+    downloadPDF(html, `AEMER-Report-${selectedAnalysis.id.slice(0, 8)}.pdf`);
   };
 
   const getEmotionEmoji = (emotion: string) => {

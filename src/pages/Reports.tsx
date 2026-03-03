@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Download, BarChart3, TrendingUp, RefreshCw, Sparkles, PieChart, Award } from 'lucide-react';
 import { getStoredResults, type AnalysisResult } from '../lib/storage';
-import { generateSummaryReportHTML, downloadHTML } from '../lib/reportGenerator';
+import { generateSummaryReportHTML, downloadPDF } from '../lib/reportGenerator';
 
 interface EmotionStats {
   emotion: string;
@@ -128,7 +128,7 @@ export function Reports() {
 
   const handleExportReport = () => {
     const html = generateSummaryReportHTML(results, emotionStats);
-    downloadHTML(html, `AEMER-Analytics-${new Date().toISOString().split('T')[0]}.html`);
+    downloadPDF(html, `AEMER-Analytics-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const avgConf = emotionStats.length > 0
