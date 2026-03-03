@@ -3,7 +3,7 @@
  * Communicates with the Python backend's /ai/* endpoints.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = 'https://sanjulasunath-aemer.hf.space';
 
 // ── Types ────────────────────────────────────────────────────────────
 
