@@ -575,18 +575,6 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ background: 'radial-gradient(circle at center, rgba(6,182,212,0.05), transparent 70%)' }} />
 
                   <div className="relative flex flex-col items-center">
-                    {/* Animated icon */}
-                    <div
-                      className="p-5 rounded-2xl mb-5 transition-all group-hover:scale-110"
-                      style={{
-                        background: isDragging ? 'rgba(6,182,212,0.15)' : 'rgba(6,182,212,0.07)',
-                        border: '1px solid rgba(6,182,212,0.12)',
-                        animation: isDragging ? 'float 2s ease-in-out infinite' : 'none',
-                      }}
-                    >
-                      <Upload className="w-8 h-8" style={{ color: '#06b6d4' }} />
-                    </div>
-
                     <input
                       type="file"
                       onChange={handleFileChange}
@@ -595,10 +583,44 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                       id="file-upload"
                     />
 
-                    {isDragging ? (
-                      <p className="font-semibold text-lg" style={{ color: '#22d3ee' }}>Drop it here!</p>
-                    ) : (
+                    {file ? (
+                      /* ── File Selected State ── */
+                      <div className="flex flex-col items-center animate-fade-in-up">
+                        <div className="p-5 rounded-2xl mb-4" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                          <CheckCircle className="w-8 h-8" style={{ color: '#10b981' }} />
+                        </div>
+                        <p className="font-semibold text-white mb-1">{file.name}</p>
+                        <p className="text-xs mb-4" style={{ color: '#6b7280' }}>
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB · {file.type.split('/')[1]?.toUpperCase() || 'FILE'}
+                        </p>
+                        <span
+                          className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer transition-all px-3 py-1.5 rounded-lg"
+                          style={{ color: '#06b6d4', background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.15)' }}
+                        >
+                          <Upload className="w-3 h-3" />
+                          Change File
+                        </span>
+                      </div>
+                    ) : isDragging ? (
+                      /* ── Dragging State ── */
                       <>
+                        <div
+                          className="p-5 rounded-2xl mb-5"
+                          style={{ background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.12)', animation: 'float 2s ease-in-out infinite' }}
+                        >
+                          <Upload className="w-8 h-8" style={{ color: '#06b6d4' }} />
+                        </div>
+                        <p className="font-semibold text-lg" style={{ color: '#22d3ee' }}>Drop it here!</p>
+                      </>
+                    ) : (
+                      /* ── Default Upload State ── */
+                      <>
+                        <div
+                          className="p-5 rounded-2xl mb-5 transition-all group-hover:scale-110"
+                          style={{ background: 'rgba(6,182,212,0.07)', border: '1px solid rgba(6,182,212,0.12)' }}
+                        >
+                          <Upload className="w-8 h-8" style={{ color: '#06b6d4' }} />
+                        </div>
                         <p className="font-semibold text-white mb-1">
                           Drag & drop your file here
                         </p>
@@ -620,13 +642,6 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                           {inputType === 'audio' ? 'Supports MP3, WAV, OGG · Max 25MB' : 'Supports MP4, MOV, WEBM, JPG, PNG · Max 25MB'}
                         </p>
                       </>
-                    )}
-
-                    {file && (
-                      <div className="mt-5 flex items-center gap-2 px-4 py-2.5 rounded-xl animate-fade-in-up" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                        <CheckCircle className="w-4 h-4" style={{ color: '#10b981' }} />
-                        <span className="text-sm font-medium" style={{ color: '#10b981' }}>{file.name}</span>
-                      </div>
                     )}
                   </div>
                 </label>
