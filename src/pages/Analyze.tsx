@@ -352,73 +352,144 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
         {step === 2 && inputType && (
           <div className="animate-fade-in-up">
             <h3 className="text-xl font-semibold text-white mb-4">Step 2: Provide Input</h3>
-            <div className="rounded-xl p-6" style={{ background: '#111111', border: '1px solid rgba(6,182,212,0.1)' }}>
+            <div className="rounded-xl p-4 sm:p-6" style={{ background: '#111111', border: '1px solid rgba(6,182,212,0.1)' }}>
               {inputType === 'multimodal' ? (
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <p className="text-sm" style={{ color: '#737373' }}>Provide at least 2 types of input for fusion analysis</p>
 
                   {/* Audio Upload */}
-                  <div className="rounded-lg p-4" style={{ border: '1px solid rgba(6,182,212,0.1)', background: 'rgba(6,182,212,0.03)' }}>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#06b6d4' }}>🎤 Audio (optional)</label>
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => setMmAudioFile(e.target.files?.[0] || null)}
-                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-cyan-500/30 file:bg-cyan-950 file:text-cyan-300 file:cursor-pointer file:font-medium file:transition-all"
-                      style={{ fontSize: '13px' }}
-                    />
-                    {mmAudioFile && <p className="mt-1 text-xs" style={{ color: '#10b981' }}>✅ {mmAudioFile.name}</p>}
+                  <div
+                    className="relative overflow-hidden rounded-xl p-5 transition-all group"
+                    style={{ background: 'rgba(6,182,212,0.04)', border: '1px solid rgba(6,182,212,0.12)' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.25)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(6,182,212,0.08)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(90deg, transparent, #06b6d4, transparent)' }} />
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 rounded-xl" style={{ background: 'rgba(6,182,212,0.1)' }}>
+                        <Mic className="w-5 h-5" style={{ color: '#06b6d4' }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white mb-1">Audio File</p>
+                        <p className="text-xs" style={{ color: '#525252' }}>MP3, WAV, OGG — optional</p>
+                      </div>
+                      <input type="file" accept="audio/*" onChange={(e) => setMmAudioFile(e.target.files?.[0] || null)} className="hidden" id="mm-audio" />
+                      <label
+                        htmlFor="mm-audio"
+                        className="px-4 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all"
+                        style={{ background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', color: '#22d3ee' }}
+                        onMouseEnter={e => { (e.target as HTMLElement).style.background = 'rgba(6,182,212,0.18)'; (e.target as HTMLElement).style.borderColor = 'rgba(6,182,212,0.35)'; }}
+                        onMouseLeave={e => { (e.target as HTMLElement).style.background = 'rgba(6,182,212,0.1)'; (e.target as HTMLElement).style.borderColor = 'rgba(6,182,212,0.2)'; }}
+                      >
+                        {mmAudioFile ? '✓ Change' : 'Browse'}
+                      </label>
+                    </div>
+                    {mmAudioFile && <p className="mt-2 text-xs pl-14" style={{ color: '#10b981' }}>✅ {mmAudioFile.name}</p>}
                   </div>
 
                   {/* Text Input */}
-                  <div className="rounded-lg p-4" style={{ border: '1px solid rgba(168,85,247,0.1)', background: 'rgba(168,85,247,0.03)' }}>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#a855f7' }}>📝 Text (optional)</label>
+                  <div
+                    className="relative overflow-hidden rounded-xl p-5 transition-all group"
+                    style={{ background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.12)' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(168,85,247,0.08)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(90deg, transparent, #a855f7, transparent)' }} />
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="p-2.5 rounded-xl" style={{ background: 'rgba(168,85,247,0.1)' }}>
+                        <FileText className="w-5 h-5" style={{ color: '#a855f7' }} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">Text Input</p>
+                        <p className="text-xs" style={{ color: '#525252' }}>Type or paste — optional</p>
+                      </div>
+                    </div>
                     <textarea
                       value={mmTextInput}
                       onChange={(e) => setMmTextInput(e.target.value)}
                       rows={2}
-                      className="w-full px-4 py-2 rounded-lg text-sm focus:outline-none"
-                      style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.06)', color: '#e5e5e5' }}
+                      className="w-full px-4 py-3 rounded-lg text-sm focus:outline-none transition-all"
+                      style={{ background: '#0a0a0a', border: '1px solid rgba(168,85,247,0.12)', color: '#e5e5e5' }}
                       placeholder="Type text here..."
+                      onFocus={e => { e.currentTarget.style.borderColor = '#a855f7'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.1)'; }}
+                      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
                     />
                   </div>
 
                   {/* Video/Image Upload */}
-                  <div className="rounded-lg p-4" style={{ border: '1px solid rgba(59,130,246,0.1)', background: 'rgba(59,130,246,0.03)' }}>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3b82f6' }}>📹 Image/Video (optional)</label>
-                    <input
-                      type="file"
-                      accept="video/*,image/*"
-                      onChange={(e) => setMmVideoFile(e.target.files?.[0] || null)}
-                      className="text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-blue-500/30 file:bg-blue-950 file:text-blue-300 file:cursor-pointer file:font-medium file:transition-all"
-                      style={{ fontSize: '13px' }}
-                    />
-                    {mmVideoFile && <p className="mt-1 text-xs" style={{ color: '#10b981' }}>✅ {mmVideoFile.name}</p>}
+                  <div
+                    className="relative overflow-hidden rounded-xl p-5 transition-all group"
+                    style={{ background: 'rgba(59,130,246,0.04)', border: '1px solid rgba(59,130,246,0.12)' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.25)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(59,130,246,0.08)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(90deg, transparent, #3b82f6, transparent)' }} />
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 rounded-xl" style={{ background: 'rgba(59,130,246,0.1)' }}>
+                        <Video className="w-5 h-5" style={{ color: '#3b82f6' }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white mb-1">Image / Video</p>
+                        <p className="text-xs" style={{ color: '#525252' }}>MP4, JPG, PNG — optional</p>
+                      </div>
+                      <input type="file" accept="video/*,image/*" onChange={(e) => setMmVideoFile(e.target.files?.[0] || null)} className="hidden" id="mm-video" />
+                      <label
+                        htmlFor="mm-video"
+                        className="px-4 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all"
+                        style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', color: '#60a5fa' }}
+                        onMouseEnter={e => { (e.target as HTMLElement).style.background = 'rgba(59,130,246,0.18)'; (e.target as HTMLElement).style.borderColor = 'rgba(59,130,246,0.35)'; }}
+                        onMouseLeave={e => { (e.target as HTMLElement).style.background = 'rgba(59,130,246,0.1)'; (e.target as HTMLElement).style.borderColor = 'rgba(59,130,246,0.2)'; }}
+                      >
+                        {mmVideoFile ? '✓ Change' : 'Browse'}
+                      </label>
+                    </div>
+                    {mmVideoFile && <p className="mt-2 text-xs pl-14" style={{ color: '#10b981' }}>✅ {mmVideoFile.name}</p>}
                   </div>
                 </div>
               ) : inputType === 'text' ? (
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: '#a3a3a3' }}>
+                  <label className="block text-sm font-medium mb-3 flex items-center gap-2" style={{ color: '#a3a3a3' }}>
+                    <FileText className="w-4 h-4" style={{ color: '#a855f7' }} />
                     Enter text to analyze
                   </label>
                   <textarea
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 rounded-lg focus:outline-none transition-all"
-                    style={{ background: '#0a0a0a', border: '1px solid rgba(6,182,212,0.15)', color: '#e5e5e5' }}
-                    placeholder="Type or paste text here..."
-                    onFocus={(e) => { e.currentTarget.style.borderColor = '#06b6d4'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(6,182,212,0.1)'; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.15)'; e.currentTarget.style.boxShadow = 'none'; }}
+                    rows={5}
+                    className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all text-sm"
+                    style={{ background: '#0a0a0a', border: '1px solid rgba(168,85,247,0.15)', color: '#e5e5e5', lineHeight: '1.7' }}
+                    placeholder="Type or paste your text here for emotion analysis..."
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#a855f7'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.1)'; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.15)'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
+                  <div className="flex justify-end mt-2">
+                    <span className="text-xs" style={{ color: textInput.length > 0 ? '#a855f7' : '#404040' }}>{textInput.length} characters</span>
+                  </div>
                 </div>
               ) : (
-                <div
-                  className="border-2 border-dashed rounded-xl p-10 text-center transition-all"
-                  style={{ borderColor: 'rgba(6,182,212,0.2)', background: 'rgba(6,182,212,0.02)' }}
+                /* ─── Audio / Video drag-drop zone ─── */
+                <label
+                  htmlFor="file-upload"
+                  className="relative block rounded-2xl p-8 sm:p-12 text-center transition-all cursor-pointer group overflow-hidden"
+                  style={{
+                    background: 'rgba(6,182,212,0.03)',
+                    border: '2px dashed rgba(6,182,212,0.15)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.35)'; e.currentTarget.style.background = 'rgba(6,182,212,0.06)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.15)'; e.currentTarget.style.background = 'rgba(6,182,212,0.03)'; }}
                 >
-                  <div className="flex flex-col items-center">
-                    <Upload className="w-10 h-10 mx-auto mb-4" style={{ color: '#06b6d4' }} />
+                  {/* Gradient shimmer on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ background: 'radial-gradient(circle at center, rgba(6,182,212,0.06), transparent 70%)' }} />
+
+                  <div className="relative flex flex-col items-center">
+                    {/* Animated icon container */}
+                    <div
+                      className="p-4 rounded-2xl mb-5 transition-transform group-hover:scale-110 group-hover:-translate-y-1"
+                      style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.12)' }}
+                    >
+                      <Upload className="w-8 h-8" style={{ color: '#06b6d4' }} />
+                    </div>
+
                     <input
                       type="file"
                       onChange={handleFileChange}
@@ -426,21 +497,23 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                       className="hidden"
                       id="file-upload"
                     />
-                    <label
-                      htmlFor="file-upload"
-                      className="cursor-pointer font-medium text-sm transition-colors"
-                      style={{ color: '#06b6d4' }}
-                    >
-                      Click to choose a file
-                    </label>
-                    <p className="text-xs mt-1" style={{ color: '#525252' }}>
-                      {inputType === 'audio' ? 'MP3, WAV, OGG' : 'MP4, MOV, WEBM, JPG, PNG'}
+
+                    <p className="font-semibold text-white mb-1">
+                      Drop your file here or <span style={{ color: '#22d3ee' }}>browse</span>
                     </p>
+                    <p className="text-xs mb-1" style={{ color: '#525252' }}>
+                      {inputType === 'audio' ? 'Supports MP3, WAV, OGG' : 'Supports MP4, MOV, WEBM, JPG, PNG'}
+                    </p>
+                    <p className="text-[10px]" style={{ color: '#404040' }}>Maximum file size: 25MB</p>
+
                     {file && (
-                      <p className="mt-3 text-sm" style={{ color: '#10b981' }}>✅ {file.name}</p>
+                      <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                        <CheckCircle className="w-4 h-4" style={{ color: '#10b981' }} />
+                        <span className="text-sm" style={{ color: '#10b981' }}>{file.name}</span>
+                      </div>
                     )}
                   </div>
-                </div>
+                </label>
               )}
 
               {error && (
