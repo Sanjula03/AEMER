@@ -639,7 +639,7 @@ export function Results() {
                   <Download className="w-4 h-4" />
                   <span>Download Full Report</span>
                 </button>
-                <p className="text-xs text-neutral-600 mt-2">Downloads as a styled HTML document. Open in any browser or print to PDF.</p>
+                <p className="text-xs text-neutral-600 mt-2">Downloads a comprehensive PDF report with full analysis details.</p>
               </div>
             </>
           )}
