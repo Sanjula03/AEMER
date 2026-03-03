@@ -466,8 +466,9 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                       onChange={e => setMmTextInput(e.target.value)}
                       rows={2}
                       className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none transition-all"
-                      style={{ background: '#0a0a0a', border: '1px solid rgba(168,85,247,0.12)', color: '#e5e5e5' }}
+                      style={{ background: '#0a0a0a', border: '1px solid rgba(168,85,247,0.12)', color: '#e5e5e5', resize: 'none', overflow: 'hidden', minHeight: '64px', maxHeight: '200px' }}
                       placeholder="Type text here..."
+                      onInput={e => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; if (t.scrollHeight > 200) t.style.overflow = 'auto'; else t.style.overflow = 'hidden'; }}
                       onFocus={e => { e.currentTarget.style.borderColor = '#a855f7'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.1)'; }}
                       onBlur={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
                     />
@@ -531,10 +532,11 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                   <textarea
                     value={textInput}
                     onChange={e => setTextInput(e.target.value)}
-                    rows={5}
+                    rows={3}
                     className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all text-sm"
-                    style={{ background: '#0a0a0a', border: '1px solid rgba(168,85,247,0.15)', color: '#e5e5e5', lineHeight: '1.7' }}
+                    style={{ background: '#0a0a0a', border: '1px solid rgba(168,85,247,0.15)', color: '#e5e5e5', lineHeight: '1.7', resize: 'none', overflow: 'hidden', minHeight: '100px', maxHeight: '300px' }}
                     placeholder="Type or paste your text here for emotion analysis..."
+                    onInput={e => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 300) + 'px'; if (t.scrollHeight > 300) t.style.overflow = 'auto'; else t.style.overflow = 'hidden'; }}
                     onFocus={e => { e.currentTarget.style.borderColor = '#a855f7'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.1)'; }}
                     onBlur={e => { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.15)'; e.currentTarget.style.boxShadow = 'none'; }}
                   />
