@@ -1,5 +1,6 @@
 import { Activity, Sparkles, LayoutDashboard, Mic, FileBarChart, PieChart } from 'lucide-react';
 import { ReactNode, useEffect, useRef } from 'react';
+import { AIChatbot } from './AIChatbot';
 
 interface LayoutProps {
   children: ReactNode;
@@ -282,6 +283,9 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           })}
         </div>
       </nav>
+
+      {/* AI Chatbot Widget */}
+      <AIChatbot />
     </div>
   );
 }

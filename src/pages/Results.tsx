@@ -22,6 +22,7 @@ import {
   DISCLAIMER_TEXT,
 } from '../lib/emotionInsights';
 import { generateSingleReportHTML, downloadPDF } from '../lib/reportGenerator';
+import { fetchAIReport } from '../lib/aiService';
 
 
 
@@ -81,9 +82,15 @@ export function Results() {
     setSelectedAnalysis(remaining.length > 0 ? remaining[0] : null);
   };
 
-  const handleDownloadReport = () => {
+  const handleDownloadReport = async () => {
     if (!selectedAnalysis) return;
-    const html = generateSingleReportHTML(selectedAnalysis);
+    // Try to fetch AI narrative for the report
+    let aiNarrative: string | undefined;
+    try {
+      const aiRes = await fetchAIReport([selectedAnalysis]);
+      if (aiRes?.narrative) aiNarrative = aiRes.narrative;
+    } catch { /* proceed without AI narrative */ }
+    const html = generateSingleReportHTML(selectedAnalysis, aiNarrative);
     downloadPDF(html, `AEMER-Report-${selectedAnalysis.id.slice(0, 8)}.pdf`);
   };
 

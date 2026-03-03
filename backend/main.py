@@ -10,7 +10,7 @@ Endpoints:
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 import os
 import sys
 
@@ -22,6 +22,7 @@ from model_handler import ModelHandler
 from accent_handler import AccentHandler
 from text_handler import TextHandler
 from video_handler import VideoEmotionHandler
+from ai_handler import AIHandler
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -45,6 +46,7 @@ model_handler = None
 accent_handler = None
 text_handler = None
 video_handler = None
+ai_handler = None
 
 # Path to the trained model
 MODEL_PATH = os.path.join(
@@ -92,6 +94,7 @@ class HealthResponse(BaseModel):
     accent_model_loaded: bool
     text_model_loaded: bool
     video_model_loaded: bool
+    ai_handler_loaded: bool = False
     device: str
 
 
@@ -153,6 +156,16 @@ async def startup_event():
     else:
         print(f"⚠️ Video model not found at: {VIDEO_MODEL_PATH}")
     
+    # Load AI handler (Gemini)
+    try:
+        ai_handler = AIHandler()
+        if ai_handler.available:
+            print(f"✅ AI Handler loaded (Gemini API)")
+        else:
+            print(f"⚠️  AI Handler loaded (fallback mode — no API key)")
+    except Exception as e:
+        print(f"❌ Failed to load AI handler: {e}")
+    
     print(f"\n{'='*50}")
     print("Server ready! API docs at: http://localhost:8000/docs")
     print(f"{'='*50}\n")
@@ -180,6 +193,7 @@ async def health_check():
         accent_model_loaded=accent_handler is not None and accent_handler.model is not None,
         text_model_loaded=text_handler is not None and text_handler.classifier is not None,
         video_model_loaded=video_handler is not None and video_handler.model is not None,
+        ai_handler_loaded=ai_handler is not None and ai_handler.available,
         device="cuda" if torch.cuda.is_available() else "cpu"
     )
 
@@ -381,6 +395,85 @@ async def predict_video_emotion(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Error processing video: {str(e)}"
         )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# AI ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════
+
+class AIInsightsRequest(BaseModel):
+    """Request for AI emotion insights."""
+    emotion_label: str
+    confidence_score: float
+    input_type: Optional[str] = None
+    all_probabilities: Optional[Dict[str, float]] = None
+    detected_accent: Optional[str] = None
+    modalities_used: Optional[List[str]] = None
+    audio_result: Optional[dict] = None
+    text_result: Optional[dict] = None
+    video_result: Optional[dict] = None
+
+
+class AIChatRequest(BaseModel):
+    """Request for AI chat."""
+    message: str
+    emotion_context: Optional[dict] = None
+    history: Optional[List[dict]] = None
+
+
+class AIReportRequest(BaseModel):
+    """Request for AI report narrative."""
+    results: List[dict]
+
+
+@app.post("/ai/insights", tags=["AI"])
+async def get_ai_insights(request: AIInsightsRequest):
+    """
+    Generate AI-powered insights from emotion analysis results.
+    Falls back to basic insights if Gemini is unavailable.
+    """
+    global ai_handler
+    if ai_handler is None:
+        ai_handler = AIHandler()
+
+    emotion_data = request.model_dump()
+    result = await ai_handler.generate_insights(emotion_data)
+    return result
+
+
+@app.post("/ai/chat", tags=["AI"])
+async def ai_chat(request: AIChatRequest):
+    """
+    Chat with the AI about emotions and wellbeing.
+    Maintains conversation context with emotion analysis data.
+    """
+    global ai_handler
+    if ai_handler is None:
+        ai_handler = AIHandler()
+
+    if not request.message or len(request.message.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+
+    result = await ai_handler.chat(
+        message=request.message,
+        emotion_context=request.emotion_context,
+        history=request.history
+    )
+    return result
+
+
+@app.post("/ai/report", tags=["AI"])
+async def ai_report(request: AIReportRequest):
+    """
+    Generate an AI-written narrative for emotion analysis reports.
+    Falls back to basic narrative if Gemini is unavailable.
+    """
+    global ai_handler
+    if ai_handler is None:
+        ai_handler = AIHandler()
+
+    result = await ai_handler.generate_report_narrative(request.results)
+    return result
 
 
 # Run server

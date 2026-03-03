@@ -40,7 +40,7 @@ function getEmoji(emotion: string): string {
 }
 
 /** Generate a styled HTML report for a single analysis */
-export function generateSingleReportHTML(result: AnalysisResult): string {
+export function generateSingleReportHTML(result: AnalysisResult, aiNarrative?: string): string {
     const wellbeing = getWellbeingIndicator(result.emotion_label, result.confidence_score);
     const summary = getMentalStateSummary(result.emotion_label, result.confidence_score, result.modalities_used);
     const valence = getEmotionalValence(result.emotion_label);
@@ -256,6 +256,16 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
 
         ${modalityHTML ? `<div class="section">${modalityHTML}</div>` : ''}
 
+        ${aiNarrative ? `
+        <!-- AI Analysis -->
+        <div class="section">
+            <h3 style="font-size:16px;font-weight:600;color:#e5e7eb;margin-bottom:12px">✨ AI Analysis Summary</h3>
+            <div style="background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.12);border-radius:10px;padding:16px">
+                <p style="font-size:13px;color:#a1a1aa;line-height:1.8;white-space:pre-wrap">${aiNarrative}</p>
+            </div>
+        </div>
+        ` : ''}
+
         <!-- Coping Strategies -->
         <div class="section">
             <h3 style="font-size:16px;font-weight:600;color:#e5e7eb;margin-bottom:12px">💚 Recommendations</h3>
@@ -305,6 +315,7 @@ export function generateSingleReportHTML(result: AnalysisResult): string {
 export function generateSummaryReportHTML(
     results: AnalysisResult[],
     emotionStats: Array<{ emotion: string; count: number; avgConfidence: number; emoji: string }>,
+    aiNarrative?: string,
 ): string {
     const dateStr = new Date().toLocaleString();
     const totalAnalyses = results.length;
@@ -403,6 +414,16 @@ export function generateSummaryReportHTML(
             <h3 style="font-size:16px;font-weight:600;color:#e5e7eb;margin-bottom:14px">📊 Emotion Breakdown</h3>
             ${statsBars}
         </div>
+
+        ${aiNarrative ? `
+        <!-- AI Analysis Summary -->
+        <div class="section">
+            <h3 style="font-size:16px;font-weight:600;color:#e5e7eb;margin-bottom:12px">✨ AI Analysis Summary</h3>
+            <div style="background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.12);border-radius:10px;padding:16px">
+                <p style="font-size:13px;color:#a1a1aa;line-height:1.8;white-space:pre-wrap">${aiNarrative}</p>
+            </div>
+        </div>
+        ` : ''}
 
         <!-- Recent Analyses -->
         <div class="section">

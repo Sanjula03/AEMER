@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Download, BarChart3, TrendingUp, RefreshCw, Sparkles, PieChart, Award } from 'lucide-react';
 import { getStoredResults, type AnalysisResult } from '../lib/storage';
 import { generateSummaryReportHTML, downloadPDF } from '../lib/reportGenerator';
+import { fetchAIReport } from '../lib/aiService';
 
 interface EmotionStats {
   emotion: string;
@@ -126,8 +127,14 @@ export function Reports() {
     return colors[emotion.toLowerCase()] || '#06b6d4';
   };
 
-  const handleExportReport = () => {
-    const html = generateSummaryReportHTML(results, emotionStats);
+  const handleExportReport = async () => {
+    // Try to fetch AI narrative for the report
+    let aiNarrative: string | undefined;
+    try {
+      const aiRes = await fetchAIReport(results);
+      if (aiRes?.narrative) aiNarrative = aiRes.narrative;
+    } catch { /* proceed without AI narrative */ }
+    const html = generateSummaryReportHTML(results, emotionStats, aiNarrative);
     downloadPDF(html, `AEMER-Analytics-${new Date().toISOString().split('T')[0]}.pdf`);
   };
 

@@ -1,10 +1,12 @@
 import { createPortal } from 'react-dom';
-import { X, AlertTriangle, Globe, Shield, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, AlertTriangle, Globe, Shield, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import {
     getMentalStateSummary,
     getWellbeingIndicator,
     DISCLAIMER_TEXT,
 } from '../lib/emotionInsights';
+import { fetchAIInsights } from '../lib/aiService';
 
 interface ModalityResult {
     emotion_label: string;
@@ -33,6 +35,42 @@ interface ResultModalProps {
 }
 
 export function ResultModal({ result, onClose, onNavigate }: ResultModalProps) {
+    const [aiInsights, setAiInsights] = useState<string | null>(null);
+    const [insightsLoading, setInsightsLoading] = useState(true);
+    const [insightsSource, setInsightsSource] = useState<string>('loading');
+
+    // Fetch AI insights when modal opens
+    useEffect(() => {
+        let cancelled = false;
+        const loadInsights = async () => {
+            try {
+                const response = await fetchAIInsights({
+                    emotion_label: result.emotion_label,
+                    confidence_score: result.confidence_score,
+                    all_probabilities: result.all_probabilities,
+                    detected_accent: result.detected_accent,
+                    modalities_used: result.modalities_used,
+                    audio_result: result.audio_result as any,
+                    text_result: result.text_result as any,
+                    video_result: result.video_result as any,
+                });
+                if (!cancelled) {
+                    setAiInsights(response?.insights || null);
+                    setInsightsSource(response?.source || 'error');
+                }
+            } catch {
+                if (!cancelled) {
+                    setAiInsights(null);
+                    setInsightsSource('error');
+                }
+            } finally {
+                if (!cancelled) setInsightsLoading(false);
+            }
+        };
+        loadInsights();
+        return () => { cancelled = true; };
+    }, [result]);
+
     const getEmotionEmoji = (emotion: string) => {
         const emojis: Record<string, string> = {
             happy: '😊',
@@ -235,6 +273,29 @@ export function ResultModal({ result, onClose, onNavigate }: ResultModalProps) {
                             </div>
                         </div>
                     )}
+
+                    {/* ── AI Insights Section ── */}
+                    <div className="rounded-lg overflow-hidden" style={{ border: '1px solid #e0f2fe' }}>
+                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)' }}>
+                            <Sparkles className="w-4 h-4" style={{ color: '#0891b2' }} />
+                            <span className="text-sm font-semibold" style={{ color: '#0e7490' }}>AI Insights</span>
+                            {insightsSource === 'gemini' && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: '#06b6d4', color: 'white' }}>Gemini</span>
+                            )}
+                        </div>
+                        <div className="px-3 py-3" style={{ background: '#fafcff' }}>
+                            {insightsLoading ? (
+                                <div className="flex items-center justify-center gap-2 py-4">
+                                    <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#06b6d4' }} />
+                                    <span className="text-xs" style={{ color: '#737373' }}>Generating AI insights...</span>
+                                </div>
+                            ) : aiInsights ? (
+                                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">{aiInsights}</p>
+                            ) : (
+                                <p className="text-xs text-gray-400 text-center py-2">AI insights unavailable. Start the backend to enable.</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Disclaimer */}
@@ -285,7 +346,7 @@ export function ResultModal({ result, onClose, onNavigate }: ResultModalProps) {
                     </div>
                 </div>
             </div>
-        </div>,
+        </div >,
         document.body
     );
 }
