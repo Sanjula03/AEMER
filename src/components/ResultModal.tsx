@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { X, AlertTriangle, Globe, Shield } from 'lucide-react';
+import { X, AlertTriangle, Globe, Shield, ArrowRight } from 'lucide-react';
 import {
     getMentalStateSummary,
     getWellbeingIndicator,
@@ -29,9 +29,10 @@ interface EmotionResult {
 interface ResultModalProps {
     result: EmotionResult;
     onClose: () => void;
+    onNavigate?: (page: string) => void;
 }
 
-export function ResultModal({ result, onClose }: ResultModalProps) {
+export function ResultModal({ result, onClose, onNavigate }: ResultModalProps) {
     const getEmotionEmoji = (emotion: string) => {
         const emojis: Record<string, string> = {
             happy: '😊',
@@ -244,17 +245,44 @@ export function ResultModal({ result, onClose }: ResultModalProps) {
                     </div>
                 </div>
 
-                {/* Button — fixed at bottom */}
+                {/* Buttons — fixed at bottom */}
                 <div
                     className="p-4 rounded-b-2xl"
                     style={{ flexShrink: 0, borderTop: '1px solid #f3f4f6' }}
                 >
-                    <button
-                        onClick={onClose}
-                        className="w-full py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors cursor-pointer"
-                    >
-                        Analyze Another
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer"
+                            style={{
+                                background: 'transparent',
+                                border: '1.5px solid #e5e7eb',
+                                color: '#6b7280',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; e.currentTarget.style.borderColor = '#d1d5db'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#e5e7eb'; }}
+                        >
+                            Analyze Another
+                        </button>
+                        {onNavigate && (
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    onNavigate('results');
+                                }}
+                                className="flex-1 py-3 rounded-lg font-medium text-sm text-white transition-all cursor-pointer flex items-center justify-center gap-2"
+                                style={{
+                                    background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                                    boxShadow: '0 4px 15px rgba(6,182,212,0.35)',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 25px rgba(6,182,212,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 15px rgba(6,182,212,0.35)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                            >
+                                View Full Report
+                                <ArrowRight className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>,

@@ -10,7 +10,7 @@ interface AnalyzeProps {
 type InputType = 'audio' | 'video' | 'text' | 'multimodal' | null;
 type Step = 1 | 2 | 3;
 
-export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
+export function Analyze({ onNavigate }: AnalyzeProps) {
   const [step, setStep] = useState<Step>(1);
   const [inputType, setInputType] = useState<InputType>(null);
   const [textInput, setTextInput] = useState('');
@@ -555,6 +555,7 @@ export function Analyze({ onNavigate: _onNavigate }: AnalyzeProps) {
         showResultModal && analysisResult && (
           <ResultModal
             result={analysisResult}
+            onNavigate={onNavigate}
             onClose={() => {
               setShowResultModal(false);
               setSuccess(false);
