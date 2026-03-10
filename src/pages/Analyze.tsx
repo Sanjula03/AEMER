@@ -425,7 +425,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                         <p className="text-sm font-semibold text-white">Audio File</p>
                         <p className="text-xs" style={{ color: '#525252' }}>Drag & drop or browse · MP3, WAV, OGG</p>
                       </div>
-                      <input type="file" accept="audio/*" onChange={e => setMmAudioFile(e.target.files?.[0] || null)} className="hidden" id="mm-audio" />
+                      <input type="file" aria-label="Upload Audio File" accept="audio/*" onChange={e => setMmAudioFile(e.target.files?.[0] || null)} className="hidden" id="mm-audio" />
                       <label
                         htmlFor="mm-audio"
                         className="px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
@@ -462,6 +462,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                       </div>
                     </div>
                     <textarea
+                      aria-label="Enter textual input for analysis"
                       value={mmTextInput}
                       onChange={e => setMmTextInput(e.target.value)}
                       rows={2}
@@ -504,7 +505,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                         <p className="text-sm font-semibold text-white">Image / Video</p>
                         <p className="text-xs" style={{ color: '#525252' }}>Drag & drop or browse · MP4, JPG, PNG</p>
                       </div>
-                      <input type="file" accept="video/*,image/*" onChange={e => setMmVideoFile(e.target.files?.[0] || null)} className="hidden" id="mm-video" />
+                      <input type="file" aria-label="Upload Video or Image File" accept="video/*,image/*" onChange={e => setMmVideoFile(e.target.files?.[0] || null)} className="hidden" id="mm-video" />
                       <label
                         htmlFor="mm-video"
                         className="px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
@@ -530,6 +531,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                     Enter text to analyze
                   </label>
                   <textarea
+                    aria-label="Enter text input for emotion analysis"
                     value={textInput}
                     onChange={e => setTextInput(e.target.value)}
                     rows={3}
@@ -577,6 +579,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                   <div className="relative flex flex-col items-center">
                     <input
                       type="file"
+                      aria-label="Upload general media file"
                       onChange={handleFileChange}
                       accept={inputType === 'audio' ? 'audio/*' : 'video/*,image/*'}
                       className="hidden"

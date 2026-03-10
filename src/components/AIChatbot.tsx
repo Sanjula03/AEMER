@@ -104,6 +104,7 @@ export function AIChatbot() {
         return (
             <button
                 id="ai-chatbot-toggle"
+                aria-label="Toggle AI Chatbot"
                 onClick={() => setIsOpen(true)}
                 className="fixed z-[9999] flex items-center justify-center transition-all duration-300 hover:scale-110"
                 style={{
@@ -178,6 +179,7 @@ export function AIChatbot() {
                 <div className="flex items-center gap-1">
                     <button
                         onClick={handleClear}
+                        aria-label="Clear chat"
                         className="p-1.5 rounded-lg transition-colors"
                         style={{ color: '#525252' }}
                         onMouseEnter={e => (e.currentTarget.style.color = '#a3a3a3')}
@@ -188,6 +190,7 @@ export function AIChatbot() {
                     </button>
                     <button
                         onClick={() => setIsOpen(false)}
+                        aria-label="Close Chat"
                         className="p-1.5 rounded-lg transition-colors"
                         style={{ color: '#525252' }}
                         onMouseEnter={e => (e.currentTarget.style.color = '#a3a3a3')}
@@ -287,6 +290,7 @@ export function AIChatbot() {
                     <input
                         ref={inputRef}
                         id="ai-chat-input"
+                        aria-label="Ask about your emotions"
                         type="text"
                         value={input}
                         onChange={e => setInput(e.target.value)}
@@ -297,6 +301,7 @@ export function AIChatbot() {
                     />
                     <button
                         onClick={handleSend}
+                        aria-label="Send message"
                         disabled={!input.trim() || isLoading}
                         className="p-2 rounded-lg transition-all"
                         style={{

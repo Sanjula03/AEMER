@@ -147,6 +147,7 @@ export function ResultModal({ result, onClose, onNavigate }: ResultModalProps) {
                 >
                     <button
                         onClick={onClose}
+                        aria-label="Close modal"
                         className="absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/40 transition-colors cursor-pointer"
                     >
                         <X className="w-5 h-5" />
