@@ -18,6 +18,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Optional, List, Tuple
+from ai_handler import AIHandler
 
 # Conditional imports for video processing
 try:
@@ -641,6 +642,9 @@ video_handler = None
 if CV2_AVAILABLE:
     video_handler = VideoEmotionHandler("video_model.pth")
 
+# Initialize AI handler
+ai_handler = None
+
 
 # ============================================
 # RESPONSE MODELS
@@ -675,6 +679,7 @@ class HealthResponse(BaseModel):
     accent_model_loaded: bool
     text_model_loaded: bool
     video_model_loaded: bool
+    ai_handler_loaded: bool
     device: str
 
 
@@ -696,9 +701,57 @@ class MultimodalPredictionResponse(BaseModel):
     video_result: Optional[ModalityResult] = None
     quality_warning: Optional[str] = None
 
+class AIInsightsRequest(BaseModel):
+    emotion_label: str
+    confidence_score: float
+    input_type: Optional[str] = None
+    all_probabilities: Optional[Dict[str, float]] = None
+    detected_accent: Optional[str] = None
+    modalities_used: Optional[List[str]] = None
+    audio_result: Optional[dict] = None
+    text_result: Optional[dict] = None
+    video_result: Optional[dict] = None
+
+class AIChatRequest(BaseModel):
+    message: str
+    emotion_context: Optional[dict] = None
+    history: Optional[List[dict]] = []
+
+class AIReportRequest(BaseModel):
+    results: List[dict]
+
 # ============================================
 # ENDPOINTS
 # ============================================
+
+@app.post("/ai/insights")
+async def ai_insights(request: AIInsightsRequest):
+    global ai_handler
+    if ai_handler is None:
+        ai_handler = AIHandler()
+    emotion_data = request.dict()
+    result = await ai_handler.generate_insights(emotion_data)
+    return result
+
+@app.post("/ai/chat")
+async def ai_chat(request: AIChatRequest):
+    global ai_handler
+    if ai_handler is None:
+        ai_handler = AIHandler()
+    result = await ai_handler.chat(
+        message=request.message,
+        emotion_context=request.emotion_context,
+        history=request.history,
+    )
+    return result
+
+@app.post("/ai/report")
+async def ai_report(request: AIReportRequest):
+    global ai_handler
+    if ai_handler is None:
+        ai_handler = AIHandler()
+    result = await ai_handler.generate_report_narrative(request.results)
+    return result
 
 @app.get("/")
 async def root():
@@ -720,12 +773,14 @@ async def root():
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Check API health and model status."""
+    global ai_handler
     return {
         "status": "healthy",
         "model_loaded": model_handler.emotion_model is not None,
         "accent_model_loaded": model_handler.accent_model is not None,
         "text_model_loaded": model_handler.text_model is not None,
         "video_model_loaded": video_handler is not None and video_handler.model is not None,
+        "ai_handler_loaded": ai_handler is not None and ai_handler.available,
         "device": str(model_handler.device)
     }
 
@@ -1020,6 +1075,12 @@ async def predict_multimodal(
 # Startup message
 @app.on_event("startup")
 async def startup_event():
+    global ai_handler
+    try:
+        ai_handler = AIHandler()
+    except Exception as e:
+        print(f"Failed to load AI Handler: {e}")
+
     print("=" * 50)
     print("  AEMER API Started!")
     print(f"  Emotion model: {'✅' if model_handler.emotion_model else '❌'}")
@@ -1027,5 +1088,9 @@ async def startup_event():
     print(f"  Text model: {'✅' if model_handler.text_model else '❌'}")
     print(f"  Video model: {'✅' if video_handler and video_handler.model else '❌'}")
     print(f"  Multimodal fusion: ✅")
+    if ai_handler and ai_handler.available:
+        print(f"  AI Handler (Gemini): ✅")
+    else:
+        print(f"  AI Handler (Fallback): ⚠️")
     print("=" * 50)
 

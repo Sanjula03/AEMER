@@ -24,3 +24,6 @@ noisereduce>=2.0.0
 # Video emotion (headless for server)
 opencv-python-headless>=4.8.0
 Pillow>=10.0.0
+
+# AI/Gemini Integration
+google-generativeai>=0.4.0

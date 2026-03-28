@@ -84,7 +84,7 @@ class AIHandler:
 
         try:
             genai.configure(api_key=GEMINI_API_KEY)
-            self.model = genai.GenerativeModel("gemini-2.0-flash")
+            self.model = genai.GenerativeModel("gemini-2.5-flash")
             self.available = True
             print("✅ AI Handler: Gemini API configured successfully")
         except Exception as e:
