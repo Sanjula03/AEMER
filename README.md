@@ -48,4 +48,4 @@ The frontend provides the dashboard for capturing media and viewing classificati
 For the Gemini generative AI integration to function, please locate the `.env.example` file in the root directory and rename it to `.env`. You must replace the placeholder text inside with a valid Gemini API key.
 
 ---
-*Developed as part of my final year BEng Software Engineering degree submission.*
+
